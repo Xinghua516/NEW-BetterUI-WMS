@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMS仓库管理系统 - 仓库管理</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <style>
+        body {
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            background-color: #343a40;
+            color: white;
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+        }
+        .sidebar a {
+            color: #ddd;
+            text-decoration: none;
+        }
+        .sidebar a:hover, .sidebar a:focus {
+            color: white;
+            background-color: #495057;
+        }
+        .sidebar .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+        .chart-container {
+            width: 100%;
+            height: 400px;
+        }
+        /* 仓库状态样式 */
+        .warehouse-status {
+            display: inline-block;
+            min-width: 80px;
+            text-align: center;
+            padding: 0.25em 0.5em;
+            font-size: 0.75em;
+            font-weight: 500;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+        }
+        .warehouse-status.normal {
+            background-color: #198754;
+        }
+        .warehouse-status.warning {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .warehouse-status.danger {
+            background-color: #dc3545;
+        }
+        
+        /* 卡片悬停浮动效果 */
+        .card-hover {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <!-- 左侧导航菜单 -->
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="bi bi-speedometer2 me-2"></i>
+                            主面板
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/parts-query">
+                            <i class="bi bi-search me-2"></i>
+                            零件信息查询
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/warehouse">
+                            <i class="bi bi-house-door me-2"></i>
+                            仓库管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/inventory">
+                            <i class="bi bi-arrow-left-right me-2"></i>
+                            出入库管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/ai-assistant">
+                            <i class="bi bi-robot me-2"></i>
+                            AI助手
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+
+        <!-- 页面内容 -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">仓库管理</h1>
+            </div>
+
+            <!-- 仓库统计信息 -->
+            <div class="row">
+                <div class="col-md-6 col-xl-3">
+                    <div class="card bg-primary text-white card-hover">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title mb-0">总库存量</h5>
+                                    <h2 class="display-6 my-2" th:text="${totalStock}">0</h2>
+                                </div>
+                                <i class="bi bi-box-seam display-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="card bg-danger text-white card-hover">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title mb-0">库存不足</h5>
+                                    <h2 class="display-6 my-2" th:text="${lowStockItemsSize}">12</h2>
+                                </div>
+                                <i class="bi bi-exclamation-triangle display-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="card bg-warning text-dark card-hover">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title mb-0">严重不足</h5>
+                                    <h2 class="display-6 my-2" th:text="${severeShortage}">5</h2>
+                                </div>
+                                <i class="bi bi-exclamation-octagon display-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="card bg-success text-dark card-hover">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title mb-0">库存充足</h5>
+                                    <h2 class="display-6 my-2" th:text="${stockShortage}">4</h2>
+                                </div>
+                                <i class="bi bi-check-circle display-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 库存明细组件 -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">库存明细</h4>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-primary active" data-filter="all">全部</button>
+                        <button type="button" class="btn btn-sm btn-outline-warning" data-filter="warning">预警</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-filter="danger">不足</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                        <tr>
+                            <th>零件编号</th>
+                            <th>零件名称</th>
+                            <th>零件来源</th>
+                            <th>零件参数</th>
+                            <th>零件类型</th>
+                            <th>当前库存</th>
+                            <th>最低库存</th>
+                            <th>库存状态</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody id="stockTableBody">
+                        <tr th:each="item : ${materialsPage.content}"
+                            th:classappend="${item.currentStock != null and item.currentStock < 10 ? 'table-danger' : (item.currentStock != null and item.currentStock < 20 ? 'table-warning' : 'table-success')}">
+                            <td th:text="${item.materialCode}">P001</td>
+                            <td th:text="${item.materialName}">零件名称</td>
+                            <td th:text="${item.materialProperty ?: '-'}">零件来源</td>
+                            <td th:text="${item.specification ?: '-'}">零件参数</td>
+                            <td th:text="${item.warehouse ?: '-'}">零件类型</td>
+                            <td th:text="${item.currentStock ?: '-'}">当前库存</td>
+                            <td th:text="${item.minStock ?: '-'}">最低库存</td>
+                            <td>
+                                <span th:if="${item.currentStock != null and item.currentStock == 0}" class="warehouse-status danger">库存为空</span>
+                                <span th:if="${item.currentStock != null and item.currentStock > 0 and item.currentStock <= 5}" class="warehouse-status danger">严重不足</span>
+                                <span th:if="${item.currentStock != null and item.currentStock > 5 and item.currentStock <= item.minStock}" class="warehouse-status warning">库存不足</span>
+                                <span th:if="${item.currentStock != null and item.currentStock > item.minStock}" class="warehouse-status normal">库存正常</span>
+                            </td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bomItemDetailModal"
+                                   th:attr="data-code=${item.materialCode}, 
+                                            data-name=${item.materialName}, 
+                                            data-property=${item.materialProperty ?: '--'}, 
+                                            data-spec=${item.specification ?: '--'}, 
+                                            data-warehouse=${item.warehouse ?: '--'}, 
+                                            data-stock=${item.currentStock ?: '--'}, 
+                                            data-minstock=${item.minStock ?: '--'}, 
+                                            data-status=${item.currentStock != null ? (item.currentStock == 0 ? '库存为空' : (item.currentStock > 0 && item.currentStock <= 5 ? '严重不足' : (item.currentStock > 5 && item.currentStock <= item.minStock ? '库存不足' : '库存正常'))) : '--'}">
+                                    <i class="bi bi-eye"></i> 查看详情
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页控件 -->
+                <div class="card-footer">
+                    <nav aria-label="库存项目分页">
+                        <ul class="pagination justify-content-center mb-0">
+                            <!-- 首页 -->
+                            <li class="page-item" th:classappend="${materialsPage.isFirst()} ? 'disabled'">
+                                <a class="page-link" th:href="@{/warehouse(page=0, size=10)}">
+                                    首页
+                                </a>
+                            </li>
+
+                            <!-- 上一页 -->
+                            <li class="page-item" th:classappend="${materialsPage.isFirst()} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/warehouse(page=${materialsPage.number - 1}, size=10)}">
+                                    上一页
+                                </a>
+                            </li>
+
+                            <!-- 页码 -->
+                            <li class="page-item"
+                                th:each="pageNumber : ${#numbers.sequence(0, materialsPage.totalPages - 1)}"
+                                th:classappend="${pageNumber == materialsPage.number} ? 'active'"
+                                th:if="${pageNumber >= materialsPage.number - 2 and pageNumber <= materialsPage.number + 2}">
+                                <a class="page-link"
+                                   th:href="@{/warehouse(page=${pageNumber}, size=10)}"
+                                   th:text="${pageNumber + 1}">
+                                    1
+                                </a>
+                            </li>
+
+                            <!-- 下一页 -->
+                            <li class="page-item" th:classappend="${materialsPage.isLast()} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/warehouse(page=${materialsPage.number + 1}, size=10)}">
+                                    下一页
+                                </a>
+                            </li>
+
+                            <!-- 末页 -->
+                            <li class="page-item" th:classappend="${materialsPage.isLast()} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/warehouse(page=${materialsPage.totalPages - 1}, size=10)}">
+                                    末页
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <!-- 分页信息 -->
+                <div class="text-center mt-2">
+                    <small class="text-muted">
+                        显示第 <span th:text="${materialsPage.number * materialsPage.size + 1}"></span> -
+                        <span th:text="${materialsPage.number * materialsPage.size + materialsPage.numberOfElements}"></span> 条，
+                        共 <span th:text="${materialsPage.totalElements}"></span> 条记录
+                    </small>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- BomItem详情模态框 -->
+<div class="modal fade" id="bomItemDetailModal" tabindex="-1" aria-labelledby="bomItemDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bomItemDetailModalLabel">BOM清单详情</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <th>序号:</th>
+                                    <td id="detailSeqNo">--</td>
+                                </tr>
+                                <tr>
+                                    <th>物料编码:</th>
+                                    <td id="detailMaterialCode">--</td>
+                                </tr>
+                                <tr>
+                                    <th>物料名称:</th>
+                                    <td id="detailMaterialName">--</td>
+                                </tr>
+                                <tr>
+                                    <th>规格:</th>
+                                    <td id="detailSpecification">--</td>
+                                </tr>
+                                <tr>
+                                    <th>物料属性:</th>
+                                    <td id="detailMaterialProperty">--</td>
+                                </tr>
+                                <tr>
+                                    <th>辅助属性:</th>
+                                    <td id="detailAuxiliaryProperty">--</td>
+                                </tr>
+                                <tr>
+                                    <th>单位:</th>
+                                    <td id="detailUnit">--</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <th>数量:</th>
+                                    <td id="detailQuantity">--</td>
+                                </tr>
+                                <tr>
+                                    <th>损耗率:</th>
+                                    <td id="detailLossRate">--</td>
+                                </tr>
+                                <tr>
+                                    <th>状态:</th>
+                                    <td id="detailStatus">--</td>
+                                </tr>
+                                <tr>
+                                    <th>仓库:</th>
+                                    <td id="detailWarehouse">--</td>
+                                </tr>
+                                <tr>
+                                    <th>备注:</th>
+                                    <td id="detailRemark">--</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // 初始化所有Tooltip
+    document.addEventListener('DOMContentLoaded', function () {
+        // 初始化所有Tooltip
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+            
+        // 库存明细表格筛选功能
+        const filters = document.querySelectorAll('[data-filter]');
+        const tableRows = document.querySelectorAll('#stockTableBody tr');
+        const visibleRowCount = document.getElementById('visibleRowCount');
+        const filteredRowCount = document.getElementById('filteredRowCount');
+            
+        // 更新统计信息
+        function updateTableStats() {
+            const totalRows = tableRows.length;
+            let visibleCount = 0;
+            tableRows.forEach(row => {
+                if (row.style.display !== 'none') visibleCount++;
+            });
+                
+            if (visibleRowCount) visibleRowCount.textContent = totalRows;
+            if (filteredRowCount) filteredRowCount.textContent = visibleCount;
+        }
+            
+        filters.forEach(filter => {
+            filter.addEventListener('click', function () {
+                const filterType = this.getAttribute('data-filter');
+                    
+                // 更新按钮状态
+                filters.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                    
+                // 过滤表格行
+                tableRows.forEach(row => {
+                    const statusCell = row.querySelector('td:nth-child(6)');
+                    if (statusCell) {
+                        const statusText = statusCell.textContent.trim();
+                        let showRow = true;
+                            
+                        switch(filterType) {
+                            case 'all':
+                                showRow = true;
+                                break;
+                            case 'warning':
+                                showRow = statusText.includes('严重不足') || statusText.includes('库存不足');
+                                break;
+                            case 'danger':
+                                showRow = statusText.includes('库存为空');
+                                break;
+                        }
+                            
+                        row.style.display = showRow ? '' : 'none';
+                    }
+                });
+                    
+                updateTableStats();
+            });
+        });
+            
+        // 为状态标签添加点击事件
+        document.querySelectorAll('.warehouse-status').forEach(status => {
+            status.style.cursor = 'pointer';
+            status.addEventListener('click', function () {
+                const statusType = this.classList.contains('danger') ? 'danger' : 
+                                  (this.classList.contains('warning') ? 'warning' : '');
+                    
+                if (statusType) {
+                    // 触发对应的筛选按钮点击
+                    const filterButton = document.querySelector(`[data-filter="${statusType}"]`);
+                    if (filterButton) {
+                        filterButton.click();
+                            
+                        // 滚动到表格区域
+                        document.querySelector('.table-container').scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            });
+        });
+            
+        updateTableStats();
+        
+        // BomItem详情模态框处理
+        const detailModal = new bootstrap.Modal(document.getElementById('bomItemDetailModal'));
+        
+        // 为所有查看详情按钮添加点击事件
+        document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#bomItemDetailModal"]').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // 从data属性获取数据
+                document.getElementById('detailSeqNo').textContent = this.getAttribute('data-seq') || '--';
+                document.getElementById('detailMaterialCode').textContent = this.getAttribute('data-code') || '--';
+                document.getElementById('detailMaterialName').textContent = this.getAttribute('data-name') || '--';
+                document.getElementById('detailMaterialProperty').textContent = this.getAttribute('data-property') || '--';
+                document.getElementById('detailSpecification').textContent = this.getAttribute('data-spec') || '--';
+                document.getElementById('detailWarehouse').textContent = this.getAttribute('data-warehouse') || '--';
+                document.getElementById('detailQuantity').textContent = this.getAttribute('data-stock') || '--';
+                document.getElementById('detailLossRate').textContent = '--'; // Material实体没有lossRate属性
+                document.getElementById('detailStatus').textContent = this.getAttribute('data-status') || '--';
+                document.getElementById('detailRemark').textContent = this.getAttribute('data-remark') || '--';
+            });
+        });
+    });
+</script>
+</body>
+</html>

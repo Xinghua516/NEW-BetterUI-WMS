@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMS仓库管理系统 - AI助手</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <style>
+        body {
+            min-height: 100vh;
+            background-color: #f8f9fa;
+            display: flex;
+        }
+
+        /* 设置按钮样式 */
+        .settings-btn {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            z-index: 1000;
+        }
+
+        /* 配置表单样式 */
+        .settings-form {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .settings-form .form-group {
+            margin-bottom: 15px;
+        }
+
+        .settings-form label {
+            font-weight: bold;
+        }
+
+        /* 左侧导航栏样式 */
+        .sidebar {
+            background-color: #343a40; /* 统一背景色 */
+            color: white;
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar a {
+            color: #ddd; /* 统一链接颜色 */
+            text-decoration: none;
+        }
+
+        .sidebar a:hover, .sidebar a:focus {
+            color: white;
+            background-color: #495057; /* 统一悬停效果 */
+        }
+
+        .sidebar .nav-link.active {
+            background-color: #0d6efd; /* 统一激活状态样式 */
+            color: white;
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* 聊天窗口样式 */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #f1f2f3;
+            border-radius: 0;
+            overflow: hidden;
+            box-shadow: none;
+        }
+
+        /* 消息显示区域 */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* 消息气泡样式 */
+        .message {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        /* 用户消息样式 */
+        .user-message {
+            align-self: flex-end;
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 8px 4px 4px 8px;
+        }
+
+        /* AI消息样式 */
+        .ai-message {
+            align-self: flex-start;
+            background-color: #ffffff;
+            color: #333;
+            border-radius: 4px 8px 8px 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #eee;
+        }
+
+        /* AI回答内容样式 */
+        .ai-response {
+            padding: 5px 0;
+        }
+
+        /* 输入区域样式 */
+        .chat-input {
+            border-top: 1px solid #ddd;
+            padding: 15px;
+            background-color: #fff;
+            display: flex; /* 使用Flexbox布局 */
+            align-items: center; /* 垂直居中对齐 */
+            gap: 10px; /* 元素之间的间距 */
+        }
+
+        .chat-input textarea {
+            resize: none;
+            height: 60px;
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            padding: 10px;
+            font-size: 14px;
+            flex: 1; /* 让textarea占据剩余空间 */
+        }
+
+        .chat-input .btn-send {
+            height: 60px;
+            padding: 0 20px;
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            border-radius: 8px;
+        }
+
+        .welcome-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            opacity: 0.5; /* 降低欢迎信息的不透明度 */
+            transition: opacity 0.3s ease; /* 添加过渡效果 */
+        }
+
+        .welcome-title {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        /* 深度思考内容样式优化 */
+        .deep-thought {
+            background-color: #343a40; /* 更深的背景色 */
+            color: white;
+            padding: 5px; /* 减少内边距使框更小 */
+            margin-bottom: 5px; /* 减少外边距使框更紧凑 */
+            border-radius: 5px;
+            font-size: 12px; /* 减小字体大小 */
+            white-space: pre-wrap;
+            overflow: hidden;
+        }
+
+        .deep-thought-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px; /* 减少标题与内容之间的间距 */
+        }
+
+        .deep-thought-header strong {
+            font-size: 14px; /* 减小标题字体大小 */
+        }
+
+        .deep-thought-toggle {
+            cursor: pointer;
+            font-size: 12px; /* 减小按钮字体大小 */
+            color: #0d6efd;
+        }
+
+        .deep-thought-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+
+        .deep-thought.open .deep-thought-content {
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body>
+<!-- 左侧导航菜单 -->
+<nav class="sidebar">
+    <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="/">
+                    <i class="bi bi-speedometer2 me-2"></i>
+                    主面板
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/parts-query">
+                    <i class="bi bi-search me-2"></i>
+                    零件信息查询
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/warehouse">
+                    <i class="bi bi-house-door me-2"></i>
+                    仓库管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/inventory">
+                    <i class="bi bi-arrow-left-right me-2"></i>
+                    出入库管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="/ai-assistant">
+                    <i class="bi bi-robot me-2"></i>
+                    AI助手
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="main-content">
+    <!-- 设置按钮 -->
+    <button class="btn btn-sm btn-secondary settings-btn" data-bs-toggle="modal" data-bs-target="#settingsModal">
+        <i class="bi bi-gear-fill"></i> 设置
+    </button>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-container" id="welcomeMessage">
+                <h3 class="welcome-title">欢迎使用仓库管理系统AI助手</h3>
+                <p class="welcome-subtitle">您可以直接输入问题，AI将为您解答库存管理相关问题。</p>
+            </div>
+        </div>
+
+        <div class="chat-input">
+            <div class="d-flex w-100">
+                <textarea id="userInput" class="form-control" placeholder="输入您的问题..."></textarea>
+                <button id="sendBtn" class="btn btn-primary btn-send ms-2">
+                    <i class="bi bi-chat-dots"></i> 发送
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 设置模态框 -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="settingsModalLabel">AI配置设置</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="settingsForm" class="settings-form">
+                    <div class="form-group">
+                        <label for="apiUrl">API地址</label>
+                        <input type="text" class="form-control" id="apiUrl" placeholder="输入AI API地址">
+                    </div>
+                    <div class="form-group">
+                        <label for="apiKey">API密钥（可选）</label>
+                        <input type="text" class="form-control" id="apiKey" placeholder="输入AI API密钥">
+                    </div>
+                    <div class="form-group">
+                        <label for="apiPort">端口号</label>
+                        <input type="number" class="form-control" id="apiPort" value="1234">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="saveSettings">保存设置</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    // 发送消息到AI助手
+    async function sendMessage() {
+        const userInput = document.getElementById('userInput');
+        const message = userInput.value.trim();
+
+        if (!message) {
+            alert('请输入消息内容');
+            return;
+        }
+
+        // 创建用户消息元素
+        const chatMessages = document.getElementById('chatMessages');
+        const userMessageElement = document.createElement('div');
+        userMessageElement.className = 'message user-message';
+        userMessageElement.textContent = message;
+        chatMessages.appendChild(userMessageElement);
+
+        // 清空输入框
+        userInput.value = '';
+
+        // 滚动到底部
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // 隐藏欢迎信息
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        if (welcomeMessage) {
+            welcomeMessage.style.opacity = '0'; // 设置欢迎信息的不透明度为0
+            setTimeout(() => {
+                welcomeMessage.style.display = 'none'; // 延迟一段时间后完全隐藏欢迎信息
+            }, 300); // 与CSS过渡时间保持一致
+        }
+
+        try {
+            // 显示AI正在思考的指示器
+            const thinkingElement = document.createElement('div');
+            thinkingElement.className = 'message ai-message';
+            thinkingElement.id = 'thinkingIndicator';
+            thinkingElement.textContent = 'AI正在思考中...';
+            chatMessages.appendChild(thinkingElement);
+
+            // 滚动到底部
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // 调用后端API获取AI响应
+            const response = await axios.post('/api/ai/chat', {
+                message: message
+            });
+
+            // 移除思考指示器
+            document.getElementById('thinkingIndicator').remove();
+
+            // 显示AI响应
+            const aiMessageElement = document.createElement('div');
+            aiMessageElement.className = 'message ai-message';
+
+            // 处理AI响应，分离思考部分和回答部分
+            const aiResponse = response.data.response || '抱歉，我没有理解您的问题。';
+
+            // 检查是否有<Think>标签
+            if (aiResponse.includes('<think>') && aiResponse.includes('</think>')) {
+                const thinkStart = aiResponse.indexOf('<think>');
+                const thinkEnd = aiResponse.indexOf('</think>') + 8;
+                const thinkContent = aiResponse.substring(thinkStart + 7, thinkEnd - 8);
+                const responseContent = aiResponse.substring(thinkEnd).trim();
+
+                aiMessageElement.innerHTML = `
+                    <div class="deep-thought">
+                        <div class="deep-thought-header">
+                            <strong>深度思考</strong>
+                            <button class="btn btn-link text-decoration-none deep-thought-toggle" onclick="toggleDeepThought(this)">展开</button>
+                        </div>
+                        <div class="deep-thought-content">${thinkContent}</div>
+                    </div>
+                    <div>${responseContent}</div>
+                `;
+            } else {
+                aiMessageElement.textContent = aiResponse;
+            }
+
+            chatMessages.appendChild(aiMessageElement);
+
+            // 滚动到底部
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        } catch (error) {
+            // 移除思考指示器
+            if (document.getElementById('thinkingIndicator')) {
+                document.getElementById('thinkingIndicator').remove();
+            }
+
+            // 显示错误信息
+            const errorMessageElement = document.createElement('div');
+            errorMessageElement.className = 'message ai-message';
+            errorMessageElement.textContent = '抱歉，AI服务暂时不可用。请稍后再试。';
+            chatMessages.appendChild(errorMessageElement);
+
+            // 滚动到底部
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            console.error('发送消息失败:', error);
+        }
+    }
+
+    // 绑定发送按钮点击事件
+    document.getElementById('sendBtn').addEventListener('click', sendMessage);
+
+    // 绑定回车键发送消息事件（Shift+Enter换行）
+    document.getElementById('userInput').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    document.getElementById('saveSettings').addEventListener('click', async () => {
+        const apiUrl = document.getElementById('apiUrl').value;
+        const apiKey = document.getElementById('apiKey').value;
+        const apiPort = document.getElementById('apiPort').value;
+
+        try {
+            // 调用后端API保存配置
+            await axios.post('/api/ai/update-config', {
+                baseUrl: `${apiUrl}:${apiPort}`,
+                apiKey: apiKey
+            });
+
+            alert('配置保存成功！');
+            // 关闭模态框
+            bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
+        } catch (error) {
+            console.error('保存配置失败:', error);
+            alert('保存配置失败，请检查输入并重试');
+        }
+    });
+
+    // 初始化配置
+    async function initSettings() {
+        try {
+            const response = await axios.get('/api/ai/get-config');
+            const config = response.data;
+
+            document.getElementById('apiUrl').value = config.baseUrl.split(':')[0];
+            document.getElementById('apiPort').value = config.baseUrl.split(':')[1] || '1234';
+            document.getElementById('apiKey').value = config.apiKey || '';
+        } catch (error) {
+            console.error('获取配置失败:', error);
+        }
+    }
+
+    // 页面加载时初始化配置
+    window.addEventListener('DOMContentLoaded', initSettings);
+
+    function toggleDeepThought(button) {
+        const deepThought = button.closest('.deep-thought');
+        deepThought.classList.toggle('open');
+
+        const toggleText = button.querySelector('.deep-thought-toggle');
+        if (toggleText.textContent === '展开') {
+            toggleText.textContent = '收起';
+        } else {
+            toggleText.textContent = '展开';
+        }
+    }
+</script>
+</body>
+</html>
