@@ -32,4 +32,6 @@ public interface MaterialRepository extends JpaRepository<Material, Long> {
                "ON m.id = stock_data.material_id " +
                "ORDER BY stock_data.stock DESC", nativeQuery = true)
     Page<Material> findAllWithCalculatedStock(Pageable pageable);
+    
+    Page<Material> findByMaterialCodeContainingOrMaterialNameContaining(String materialCode, String materialName, Pageable pageable);
 }

@@ -515,7 +515,7 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
             // 调用后端API获取AI响应
-            const response = await axios.post('/api/ai/chat', {
+            const response = await axios.post('/ai/chat', {
                 message: message
             });
 
@@ -621,7 +621,7 @@
 
         try {
             // 调用后端API保存配置
-            await axios.post('/api/ai/update-config', {
+            await axios.post('/ai/update-config', {
                 baseUrl: `${apiUrl}:${apiPort}`,
                 apiKey: apiKey
             });
@@ -638,7 +638,7 @@
     // 初始化配置
     async function initSettings() {
         try {
-            const response = await axios.get('/api/ai/get-config');
+            const response = await axios.get('/ai/get-config');
             const config = response.data;
 
             document.getElementById('apiUrl').value = config.baseUrl.split(':')[0];

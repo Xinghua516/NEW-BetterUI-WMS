@@ -211,25 +211,53 @@
                                             </div>
                                             <div class="chart-item">
                                                 <div class="chart-container" id="partsTypeChart"></div>
+                                                <!-- 隐藏的数据容器 -->
+                                                <div id="materialTypeData" style="display: none;"></div>
+                                                <script th:inline="javascript">
+                                                    // 将Thymeleaf数据传递给JavaScript
+                                                    var materialTypePercentage = /*[[${materialTypePercentage}]]*/ {};
+                                                </script>
                                                 <script>
                                                     // 初始化零件类型图表
                                                     var partsTypeChart = echarts.init(document.getElementById('partsTypeChart'));
+
                                                     // 获取零件类型百分比数据
-                                                    var partsTypeData = [];
-                                                    for (var key in [[${materialTypePercentage}]]) {
-                                                        partsTypeData.push({ name: key, value: [[${materialTypePercentage[key]}]] });
+                                                    var materialTypeData = [];
+                                                    for (var key in materialTypePercentage) {
+                                                        if (materialTypePercentage.hasOwnProperty(key)) {
+                                                            materialTypeData.push({ value: materialTypePercentage[key], name: key });
+                                                        }
                                                     }
+
                                                     // 配置零件类型图表选项
                                                     var partsTypeOption = {
+                                                        title: {
+                                                            text: '零件类型',
+                                                            left: 'center'
+                                                        },
                                                         tooltip: {
                                                             trigger: 'item'
+                                                        },
+                                                        legend: {
+                                                            orient: 'vertical',
+                                                            right: 5,
+                                                            top: 'middle',
+                                                            textStyle: {
+                                                                fontSize: 10
+                                                            }
                                                         },
                                                         series: [
                                                             {
                                                                 name: '零件类型',
                                                                 type: 'pie',
-                                                                radius: ['50%', '70%'],
+                                                                radius: ['40%', '70%'],
+                                                                center: ['30%', '55%'],
                                                                 avoidLabelOverlap: false,
+                                                                itemStyle: {
+                                                                    borderRadius: 10,
+                                                                    borderColor: '#fff',
+                                                                    borderWidth: 2
+                                                                },
                                                                 label: {
                                                                     show: false,
                                                                     position: 'center'
@@ -237,14 +265,14 @@
                                                                 emphasis: {
                                                                     label: {
                                                                         show: true,
-                                                                        fontSize: '40',
+                                                                        fontSize: 12,
                                                                         fontWeight: 'bold'
                                                                     }
                                                                 },
                                                                 labelLine: {
                                                                     show: false
                                                                 },
-                                                                data: partsTypeData
+                                                                data: materialTypeData
                                                             }
                                                         ]
                                                     };
@@ -254,25 +282,33 @@
                                             </div>
                                         </div>
                                         <div class="mt-2">
-                                            <p class="mb-1">原材料占比 <span class="float-end" th:text="${materialTypePercentage['原材料']} + '%'">30%</span></p>
-                                            <div class="progress environment-progress">
-                                                <div class="progress-bar bg-primary" role="progressbar" th:style="'width: ' + ${materialTypePercentage['原材料']} + '%'" th:attr="aria-valuenow=${materialTypePercentage['原材料']}" aria-valuemin="0" aria-valuemax="100"></div>
+                                            <div th:each="entry : ${materialTypePercentage}" th:if="${materialTypePercentage != null and !materialTypePercentage.empty}">
+                                                <p class="mb-1">
+                                                    <span th:text="${entry.key}">原材料</span>占比
+                                                    <span class="float-end" th:text="${entry.value} + '%'">30%</span>
+                                                </p>
+                                                <div class="progress environment-progress">
+                                                    <div class="progress-bar" role="progressbar"
+                                                         th:style="${entry.value != null ? 'width: ' + entry.value + '%' : 'width: 0%'}"
+                                                         th:attr="aria-valuenow=${entry.value != null ? entry.value : 0}"
+                                                         aria-valuemin="0" aria-valuemax="100"
+                                                         th:classappend="${entry.key == '原材料' ? 'bg-primary' :
+                                                     (entry.key == '半成品' ? 'bg-warning' :
+                                                      (entry.key == '成品' ? 'bg-danger' :
+                                                       (entry.key == '辅料' ? 'bg-info' :
+                                                        (entry.key == '包装材料' ? 'bg-secondary' : 'bg-success'))))}">
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <p class="mb-1">半成品占比 <span class="float-end" th:text="${materialTypePercentage['半成品']} + '%'">20%</span></p>
-                                            <div class="progress environment-progress">
-                                                <div class="progress-bar bg-warning" role="progressbar" th:style="'width: ' + ${materialTypePercentage['半成品']} + '%'" th:attr="aria-valuenow=${materialTypePercentage['半成品']}" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                            <p class="mb-1">成品占比 <span class="float-end" th:text="${materialTypePercentage['成品']} + '%'">15%</span></p>
-                                            <div class="progress environment-progress">
-                                                <div class="progress-bar bg-danger" role="progressbar" th:style="'width: ' + ${materialTypePercentage['成品']} + '%'" th:attr="aria-valuenow=${materialTypePercentage['成品']}" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                            <p class="mb-1">辅料占比 <span class="float-end" th:text="${materialTypePercentage['辅料']} + '%'">10%</span></p>
-                                            <div class="progress environment-progress">
-                                                <div class="progress-bar bg-info" role="progressbar" th:style="'width: ' + ${materialTypePercentage['辅料']} + '%'" th:attr="aria-valuenow=${materialTypePercentage['辅料']}" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                            <p class="mb-1">包装材料占比 <span class="float-end" th:text="${materialTypePercentage['包装材料']} + '%'">5%</span></p>
-                                            <div class="progress environment-progress">
-                                                <div class="progress-bar bg-secondary" role="progressbar" th:style="'width: ' + ${materialTypePercentage['包装材料']} + '%'" th:attr="aria-valuenow=${materialTypePercentage['包装材料']}" aria-valuemin="0" aria-valuemax="100"></div>
+                                            <div th:if="${materialTypePercentage == null or materialTypePercentage.empty}">
+                                                <p class="mb-1">默认仓库占比<span class="float-end">100%</span></p>
+                                                <div class="progress environment-progress">
+                                                    <div class="progress-bar bg-primary" role="progressbar"
+                                                         style="width: 100%"
+                                                         aria-valuenow="100"
+                                                         aria-valuemin="0" aria-valuemax="100">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -444,20 +480,23 @@
             var partsChartDom = document.getElementById('partsTypeChart');
             var partsChart = echarts.init(partsChartDom);
 
-            // 从Thymeleaf获取材料类型统计百分比数据
-            var materialTypePercentages = [
-                /* 使用Thymeleaf内联获取百分比数据 */
-                {percentage: /*[[${materialTypePercentage['原材料'] != null ? materialTypePercentage['原材料'] : 0}]]*/ 30, name: '原材料'},
-                {percentage: /*[[${materialTypePercentage['半成品'] != null ? materialTypePercentage['半成品'] : 0}]]*/ 20, name: '半成品'},
-                {percentage: /*[[${materialTypePercentage['成品'] != null ? materialTypePercentage['成品'] : 0}]]*/ 15, name: '成品'},
-                {percentage: /*[[${materialTypePercentage['辅料'] != null ? materialTypePercentage['辅料'] : 0}]]*/ 10, name: '辅料'},
-                {percentage: /*[[${materialTypePercentage['包装材料'] != null ? materialTypePercentage['包装材料'] : 0}]]*/ 5, name: '包装材料'}
-            ];
-
-            // 将百分比数据转换为饼图需要的格式
-            var materialTypeData = materialTypePercentages.map(function(item) {
-                return {value: item.percentage, name: item.name};
-            });
+            // 获取零件类型百分比数据
+            var materialTypeDataElement = document.getElementById('materialTypeData');
+            var materialTypeData = {};
+            try {
+                materialTypeData = JSON.parse(materialTypeDataElement.getAttribute('data-value'));
+            } catch (e) {
+                // 如果解析失败，使用默认数据
+                materialTypeData = {"默认仓库": 100};
+            }
+            
+            // 转换数据格式
+            var materialTypePercentages = [];
+            for (var key in materialTypeData) {
+                if (materialTypeData.hasOwnProperty(key)) {
+                    materialTypePercentages.push({value: materialTypeData[key], name: key});
+                }
+            }
 
             var partsOption = {
                 title: {
@@ -501,9 +540,7 @@
                         labelLine: {
                             show: false
                         },
-                        data: materialTypeData,
-                        // 让图表按照百分比显示
-                        type: 'pie'
+                        data: materialTypePercentages
                     }
                 ]
             };

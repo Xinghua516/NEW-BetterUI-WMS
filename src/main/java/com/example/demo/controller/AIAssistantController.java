@@ -1,9 +1,12 @@
 package com.example.demo.controller;
 
 import com.example.demo.AI.ChatClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -14,9 +17,16 @@ import java.util.Map;
  * AI助手控制器，处理AI相关请求
  * 提供同步和流式两种AI响应模式
  */
-@RestController
-@RequestMapping("/api/ai")
+@Controller
+@RequestMapping("/")
 public class AIAssistantController {
+    private static final Logger logger = LoggerFactory.getLogger(AIAssistantController.class);
+
+    @GetMapping("/ai-assistant")
+    public String aiAssistant() {
+        logger.info("访问AI助手页面");
+        return "ai-assistant";
+    }
 
     private final ChatClient chatClient;
     
@@ -36,7 +46,7 @@ public class AIAssistantController {
      * @param request 请求参数，包含message字段
      * @return AI处理后的响应
      */
-    @PostMapping("/chat")
+    @PostMapping("/ai/chat")
     public ResponseEntity<Map<String, String>> chat(@RequestBody Map<String, String> request) {
         try {
             String message = request.get("message");
@@ -62,7 +72,7 @@ public class AIAssistantController {
      * @param request 请求参数，包含message字段
      * @return AI响应流
      */
-    @PostMapping("/chat-stream")
+    @PostMapping("/ai/chat-stream")
     public ResponseEntity<Flux<String>> chatStream(@RequestBody Map<String, String> request) {
         try {
             String message = request.get("message");
@@ -81,7 +91,7 @@ public class AIAssistantController {
      * @param request 请求参数，包含naturalLanguageQuery字段
      * @return 生成的MySQL查询语句
      */
-    @PostMapping("/generate-sql")
+    @PostMapping("/ai/generate-sql")
     public ResponseEntity<Map<String, String>> generateSql(@RequestBody Map<String, String> request) {
         try {
             String naturalLanguageQuery = request.get("naturalLanguageQuery");
@@ -106,7 +116,7 @@ public class AIAssistantController {
      * 获取当前AI配置
      * @return 当前配置信息
      */
-    @GetMapping("/get-config")
+    @GetMapping("/ai/get-config")
     public ResponseEntity<Map<String, String>> getConfig() {
         Map<String, String> config = new HashMap<>();
         config.put("baseUrl", openAiBaseUrl);
@@ -119,7 +129,7 @@ public class AIAssistantController {
      * @param config 新的配置信息
      * @return 更新结果
      */
-    @PostMapping("/update-config")
+    @PostMapping("/ai/update-config")
     public ResponseEntity<Map<String, String>> updateConfig(@RequestBody Map<String, String> config) {
         try {
             // 更新配置

@@ -1,0 +1,173 @@
+<!-- 左上角：仓库情况 -->
+<div class="col-md-6">
+    <div class="card h-100">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-house me-2"></i>当前仓库情况
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row h-100">
+                <div class="col-md-12">
+                    <div class="chart-row">
+                        <div class="chart-item">
+                            <div class="chart-container" id="spaceChart"></div>
+                            <script>
+                                // 初始化库存空间图表
+                                var spaceChart = echarts.init(document.getElementById('spaceChart'));
+                                // 获取已用空间和可用空间数据
+                                var spaceData = [
+                                    { value: [[${spaceUsage['usedSpace']}]], name: '已用空间' },
+                                    { value: [[${spaceUsage['availableSpace']}]], name: '可用空间' }
+                                ];
+                                // 配置库存空间图表选项
+                                var spaceOption = {
+                                    tooltip: {
+                                        trigger: 'item'
+                                    },
+                                    series: [
+                                        {
+                                            name: '库存空间',
+                                            type: 'pie',
+                                            radius: ['50%', '70%'],
+                                            avoidLabelOverlap: false,
+                                            label: {
+                                                show: false,
+                                                position: 'center'
+                                            },
+                                            emphasis: {
+                                                label: {
+                                                    show: true,
+                                                    fontSize: '40',
+                                                    fontWeight: 'bold'
+                                                }
+                                            },
+                                            labelLine: {
+                                                show: false
+                                            },
+                                            data: spaceData
+                                        }
+                                    ]
+                                };
+                                // 应用配置项并渲染图表
+                                spaceChart.setOption(spaceOption);
+                            </script>
+                        </div>
+                        <div class="chart-item">
+                            <div class="chart-container" id="partsTypeChart"></div>
+                            <!-- 隐藏的数据容器 -->
+                            <div id="materialTypeData" style="display: none;"></div>
+                            <script th:inline="javascript">
+                                // 将Thymeleaf数据传递给JavaScript
+                                var materialTypePercentage = /*[[${materialTypePercentage}]]*/ {};
+                            </script>
+                            <script>
+                                // 初始化零件类型图表
+                                var partsTypeChart = echarts.init(document.getElementById('partsTypeChart'));
+                                
+                                // 获取零件类型百分比数据
+                                var materialTypeData = {};
+                                try {
+                                    materialTypeData = materialTypePercentage || {};
+                                } catch (e) {
+                                    // 如果解析失败，使用默认数据
+                                    materialTypeData = {"默认仓库": 100};
+                                }
+                                
+                                // 转换数据格式
+                                var partsTypeData = [];
+                                for (var key in materialTypeData) {
+                                    if (materialTypeData.hasOwnProperty(key)) {
+                                        partsTypeData.push({ value: materialTypeData[key], name: key });
+                                    }
+                                }
+                                
+                                // 配置零件类型图表选项
+                                var partsTypeOption = {
+                                    title: {
+                                        text: '零件类型',
+                                        left: 'center'
+                                    },
+                                    tooltip: {
+                                        trigger: 'item'
+                                    },
+                                    legend: {
+                                        orient: 'vertical',
+                                        right: 5,
+                                        top: 'middle',
+                                        textStyle: {
+                                            fontSize: 10
+                                        }
+                                    },
+                                    series: [
+                                        {
+                                            name: '零件类型',
+                                            type: 'pie',
+                                            radius: ['40%', '70%'],
+                                            center: ['30%', '55%'],
+                                            avoidLabelOverlap: false,
+                                            itemStyle: {
+                                                borderRadius: 10,
+                                                borderColor: '#fff',
+                                                borderWidth: 2
+                                            },
+                                            label: {
+                                                show: false,
+                                                position: 'center'
+                                            },
+                                            emphasis: {
+                                                label: {
+                                                    show: true,
+                                                    fontSize: 12,
+                                                    fontWeight: 'bold'
+                                                }
+                                            },
+                                            labelLine: {
+                                                show: false
+                                            },
+                                            data: partsTypeData
+                                        }
+                                    ]
+                                };
+                                // 应用配置项并渲染图表
+                                partsTypeChart.setOption(partsTypeOption);
+                            </script>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <div th:each="entry : ${materialTypePercentage}" th:if="${materialTypePercentage != null and !materialTypePercentage.empty}">
+                            <p class="mb-1">
+                                <span th:text="${entry.key}">原材料</span>占比
+                                <span class="float-end" th:text="${entry.value} + '%'">30%</span>
+                            </p>
+                            <div class="progress environment-progress">
+                                <div class="progress-bar" role="progressbar" 
+                                     th:style="${entry.value != null ? 'width: ' + entry.value + '%' : 'width: 0%'}" 
+                                     th:attr="aria-valuenow=${entry.value != null ? entry.value : 0}" 
+                                     aria-valuemin="0" aria-valuemax="100"
+                                     th:classappend="${entry.key == '原材料' ? 'bg-primary' : 
+                                                     (entry.key == '半成品' ? 'bg-warning' : 
+                                                      (entry.key == '成品' ? 'bg-danger' : 
+                                                       (entry.key == '辅料' ? 'bg-info' : 
+                                                        (entry.key == '包装材料' ? 'bg-secondary' : 'bg-success'))))}">
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${materialTypePercentage == null or materialTypePercentage.empty}">
+                            <p class="mb-1">默认仓库占比<span class="float-end">100%</span></p>
+                            <div class="progress environment-progress">
+                                <div class="progress-bar bg-primary" role="progressbar" 
+                                     style="width: 100%" 
+                                     aria-valuenow="100" 
+                                     aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ... existing code ... -->
