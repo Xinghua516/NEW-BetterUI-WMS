@@ -202,9 +202,8 @@
                             <th>零件来源</th>
                             <th>零件参数</th>
                             <th>零件类型</th>
-                            <th>当前库存</th>
-                            <th>最低库存</th>
-                            <th>库存状态</th>
+                            <th>库存数量</th> <!-- 修改列名：当前库存 -> 库存数量 -->
+                            <th>库存状态</th> <!-- 修改列名：库存状态 -->
                             <th>操作</th>
                         </tr>
                         </thead>
@@ -216,24 +215,23 @@
                             <td th:text="${item.materialProperty ?: '-'}">零件来源</td>
                             <td th:text="${item.specification ?: '-'}">零件参数</td>
                             <td th:text="${item.warehouse ?: '-'}">零件类型</td>
-                            <td th:text="${item.currentStock ?: '-'}">当前库存</td>
-                            <td th:text="${item.minStock ?: '-'}">最低库存</td>
+                            <td th:text="${item.currentStock ?: '-'}">库存数量</td> <!-- 修改列内容：当前库存 -> 库存数量 -->
                             <td>
-                                <span th:if="${item.currentStock != null and item.currentStock == 0}" class="warehouse-status danger">库存为空</span>
-                                <span th:if="${item.currentStock != null and item.currentStock > 0 and item.currentStock <= 5}" class="warehouse-status danger">严重不足</span>
-                                <span th:if="${item.currentStock != null and item.currentStock > 5 and item.currentStock <= item.minStock}" class="warehouse-status warning">库存不足</span>
-                                <span th:if="${item.currentStock != null and item.currentStock > item.minStock}" class="warehouse-status normal">库存正常</span>
-                            </td>
+                                <span th:if="${item.currentStock == 0}" class="warehouse-status danger">库存为空</span>
+                                <span th:if="${item.currentStock > 0 and item.currentStock <= 5}" class="warehouse-status danger">严重不足</span>
+                                <span th:if="${item.currentStock > 5 and item.currentStock <= item.minStock}" class="warehouse-status warning">库存不足</span>
+                                <span th:if="${item.currentStock > item.minStock}" class="warehouse-status normal">库存正常</span>
+                            </td> <!-- 库存状态判断 -->
                             <td>
                                 <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bomItemDetailModal"
-                                   th:attr="data-code=${item.materialCode}, 
-                                            data-name=${item.materialName}, 
-                                            data-property=${item.materialProperty ?: '--'}, 
-                                            data-spec=${item.specification ?: '--'}, 
-                                            data-warehouse=${item.warehouse ?: '--'}, 
-                                            data-stock=${item.currentStock ?: '--'}, 
-                                            data-minstock=${item.minStock ?: '--'}, 
-                                            data-status=${item.currentStock != null ? (item.currentStock == 0 ? '库存为空' : (item.currentStock > 0 && item.currentStock <= 5 ? '严重不足' : (item.currentStock > 5 && item.currentStock <= item.minStock ? '库存不足' : '库存正常'))) : '--'}">
+                                   th:attr="data-code=${item.materialCode},
+                        data-name=${item.materialName},
+                        data-property=${item.materialProperty ?: '--'},
+                        data-spec=${item.specification ?: '--'},
+                        data-warehouse=${item.warehouse ?: '--'},
+                        data-stock=${item.currentStock ?: '--'},
+                        data-minstock=${item.minStock ?: '--'},
+                        data-status=${item.currentStock != null ? (item.currentStock == 0 ? '库存为空' : (item.currentStock > 0 && item.currentStock <= 5 ? '严重不足' : (item.currentStock > 5 && item.currentStock <= item.minStock ? '库存不足' : '库存正常'))) : '--'}">
                                     <i class="bi bi-eye"></i> 查看详情
                                 </a>
                             </td>

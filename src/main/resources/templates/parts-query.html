@@ -10,6 +10,7 @@
         body {
             min-height: 100vh;
             background-color: #f8f9fa;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
         .sidebar {
             background-color: #343a40;
@@ -17,10 +18,12 @@
             height: 100vh;
             position: fixed;
             overflow-y: auto;
+            transition: all 0.3s ease;
         }
         .sidebar a {
             color: #ddd;
             text-decoration: none;
+            transition: all 0.2s ease;
         }
         .sidebar a:hover, .sidebar a:focus {
             color: white;
@@ -33,253 +36,394 @@
         .main-content {
             margin-left: 250px;
             padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
         }
         .search-box {
             background: white;
-            border-radius: 5px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.3s ease;
+        }
+        .search-box:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
         }
         .table-container {
             background: white;
-            border-radius: 5px;
-            padding: 20px;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
         }
         .pagination {
             justify-content: center;
+            margin-top: 20px;
+        }
+        .pagination .page-item .page-link {
+            color: #0d6efd;
+            border-radius: 6px;
+            margin: 0 4px;
+            transition: all 0.2s ease;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+        }
+        .pagination .page-item .page-link:hover {
+            background-color: #eef2ff;
+            transform: translateY(-1px);
+        }
+        .low-stock-card {
+            border: none;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .low-stock-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+        .low-stock-card .card-header {
+            background-color: #fff3cd;
+            color: #856404;
+            font-weight: 600;
+            padding: 12px 20px;
+            border-bottom: 1px solid #ffeeba;
         }
         .low-stock-item {
-            padding: 8px 12px;
-            margin-bottom: 8px;
-            background-color: #fff3cd;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background-color: #fff8e1;
             border: 1px solid #ffeaa7;
-            border-radius: 4px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        .low-stock-item:hover {
+            background-color: #fff3cd;
+            transform: translateX(3px);
         }
         .low-stock-badge {
             font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+        .form-control {
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            transition: all 0.3s ease;
+            padding: 10px 15px;
+        }
+        .form-control:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+            outline: none;
+        }
+        .btn {
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+        }
+        .btn-secondary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.2);
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table thead {
+            background-color: #f8f9fa;
+        }
+        .table thead th {
+            font-weight: 600;
+            padding: 12px 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .table tbody td {
+            padding: 12px 15px;
+            vertical-align: middle;
+            transition: background-color 0.2s ease;
+        }
+        .table tbody tr:hover td {
+            background-color: #f8fafc;
+        }
+        .badge {
+            border-radius: 12px;
+            padding: 3px 8px;
+            font-weight: 500;
+        }
+        .badge-success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        .badge-secondary {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        .text-muted {
+            color: #6c757d !important;
+        }
+        .page-info {
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        .action-btn {
+            padding: 4px 10px;
+            font-size: 0.85rem;
+        }
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2);
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- 左侧导航菜单 -->
-            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-                <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/">
-                                <i class="bi bi-speedometer2 me-2"></i>
-                                主面板
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link active" href="/parts-query">
-                                <i class="bi bi-search me-2"></i>
-                                零件信息查询
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/warehouse">
-                                <i class="bi bi-house-door me-2"></i>
-                                仓库管理
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/inventory">
-                                <i class="bi bi-arrow-left-right me-2"></i>
-                                出入库管理
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/ai-assistant">
-                                <i class="bi bi-robot me-2"></i>
-                                AI助手
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
+<div class="container-fluid">
+    <div class="row">
+        <!-- 左侧导航菜单 -->
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="bi bi-speedometer2 me-2"></i>
+                            主面板
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/parts-query">
+                            <i class="bi bi-search me-2"></i>
+                            零件信息查询
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/warehouse">
+                            <i class="bi bi-house-door me-2"></i>
+                            仓库管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/inventory">
+                            <i class="bi bi-arrow-left-right me-2"></i>
+                            出入库管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/ai-assistant">
+                            <i class="bi bi-robot me-2"></i>
+                            AI助手
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
 
-            <!-- 页面内容 -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">零件信息查询</h1>
-                </div>
+        <!-- 页面内容 -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">零件信息查询</h1>
+            </div>
 
-                <div class="row">
-                    <!-- 左侧低库存零件显示区域 -->
-                    <div class="col-md-3">
-                        <div class="card">
-                            <div class="card-header bg-warning text-dark">
-                                <i class="bi bi-exclamation-triangle me-1"></i>数量不足的零件
-                            </div>
-                            <div class="card-body">
-                                <div id="lowStockItems">
-                                    <!-- 低库存零件将在这里显示 -->
+            <div class="row">
+                <!-- 左侧低库存零件显示区域 -->
+                <div class="col-md-3">
+                    <div class="card low-stock-card">
+                        <div class="card-header">
+                            <i class="bi bi-exclamation-triangle me-1"></i>数量不足的零件
+                        </div>
+                        <div class="card-body">
+                            <div id="lowStockItems">
+                                <!-- 低库存零件将在这里显示 -->
+                                <div th:if="${lowStockItems != null and !lowStockItems.empty}">
+                                    <div class="low-stock-item" th:each="item : ${lowStockItems}">
+                                        <div class="d-flex justify-content-between">
+                                            <strong th:text="${item.materialName ?: '未定义'}">零件名称</strong>
+                                            <span class="badge bg-danger low-stock-badge"
+                                                  th:text="'库存: ' + ${item.currentStock ?: 0}">库存: 0</span>
+                                        </div>
+                                        <div class="text-muted small" th:text="${item.specification ?: '无规格信息'}">规格</div>
+                                    </div>
+                                </div>
+                                <div th:if="${lowStockItems == null or lowStockItems.empty}">
                                     <div class="alert alert-info">暂无低库存预警信息</div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- 右侧搜索和结果区域 -->
-                    <div class="col-md-9">
-                        <div class="search-box">
-                            <form class="row g-3" method="get" th:action="@{/parts-query}">
-                                <div class="col-md-8">
-                                    <label for="keyword" class="form-label">搜索零件</label>
-                                    <input type="text" class="form-control" id="keyword" name="keyword" 
-                                           placeholder="输入零件编号或名称进行搜索" th:value="${keyword}">
+                </div>
+
+                <!-- 右侧搜索和结果区域 -->
+                <div class="col-md-9">
+                    <div class="search-box">
+                        <form class="row g-3" method="get" th:action="@{/parts-query}">
+                            <div class="col-md-8">
+                                <label for="keyword" class="form-label">搜索零件</label>
+                                <input type="text" class="form-control" id="keyword" name="keyword"
+                                       placeholder="输入零件编号或名称进行搜索" th:value="${keyword}">
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="bi bi-search me-1"></i>搜索
+                                </button>
+                                <a href="/parts-query" class="btn btn-secondary">清空</a>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="table-container">
+                        <div th:if="${materialsPage != null and materialsPage.totalElements > 0}">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead class="table-dark">
+                                    <tr>
+                                        <th>零件编号</th>
+                                        <th>零件名称</th>
+                                        <th>规格型号</th>
+                                        <th>单位</th>
+                                        <th>物料属性</th>
+                                        <th>辅助属性</th>
+                                        <th>默认仓库</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="material : ${materialsPage.content}">
+                                        <td th:text="${material.materialCode}"></td>
+                                        <td th:text="${material.materialName}"></td>
+                                        <td th:text="${material.specification ?: '-'}"></td>
+                                        <td th:text="${material.unit}"></td>
+                                        <td th:text="${material.materialProperty ?: '-'}"></td>
+                                        <td th:text="${material.auxiliaryProperty ?: '-'}"></td>
+                                        <td th:text="${material.warehouse ?: '-'}"></td>
+                                        <td>
+                                            <span class="badge bg-success" th:if="${material.status == null or material.status == '启用'}">启用</span>
+                                            <span class="badge bg-secondary" th:unless="${material.status == null or material.status == '启用'}"
+                                                  th:text="${material.status ?: '未知'}"></span>
+                                        </td>
+                                        <!-- 添加链接到零件详细信息页面 -->
+                                        <td>
+                                            <a th:href="@{/material/{id}(id=${material.id})}" class="btn btn-sm btn-primary action-btn">查看详情</a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- 分页 -->
+                            <nav aria-label="零件信息分页" th:if="${materialsPage.totalPages > 1}">
+                                <ul class="pagination">
+                                    <li class="page-item" th:classappend="${materialsPage.first} ? 'disabled'">
+                                        <a class="page-link"
+                                           th:href="@{/parts-query(page=${materialsPage.number - 1}, size=${materialsPage.size}, keyword=${keyword})}"
+                                           aria-label="上一页">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+
+                                    <li class="page-item" th:each="i : ${#numbers.sequence(0, materialsPage.totalPages - 1)}"
+                                        th:classappend="${i == materialsPage.number} ? 'active'">
+                                        <a class="page-link"
+                                           th:href="@{/parts-query(page=${i}, size=${materialsPage.size}, keyword=${keyword})}"
+                                           th:text="${i + 1}"></a>
+                                    </li>
+
+                                    <li class="page-item" th:classappend="${materialsPage.last} ? 'disabled'">
+                                        <a class="page-link"
+                                           th:href="@{/parts-query(page=${materialsPage.number + 1}, size=${materialsPage.size}, keyword=${keyword})}"
+                                           aria-label="下一页">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                </ul>
+
+                                <div class="text-center text-muted page-info">
+                                    显示第 <span th:text="${materialsPage.number * materialsPage.size + 1}"></span> -
+                                    <span th:text="${materialsPage.number * materialsPage.size + materialsPage.numberOfElements}"></span> 条，
+                                    共 <span th:text="${materialsPage.totalElements}"></span> 条记录
                                 </div>
-                                <div class="col-md-4 d-flex align-items-end">
-                                    <button type="submit" class="btn btn-primary me-2">
-                                        <i class="bi bi-search me-1"></i>搜索
-                                    </button>
-                                    <a href="/parts-query" class="btn btn-secondary">清空</a>
-                                </div>
-                            </form>
+                            </nav>
                         </div>
 
-                        <div class="table-container">
-                            <div th:if="${materialsPage != null and materialsPage.totalElements > 0}">
-                                <div class="table-responsive">
-                                    <table class="table table-striped table-hover">
-                                        <thead class="table-dark">
-                                            <tr>
-                                                <th>零件编号</th>
-                                                <th>零件名称</th>
-                                                <th>规格型号</th>
-                                                <th>单位</th>
-                                                <th>物料属性</th>
-                                                <th>辅助属性</th>
-                                                <th>默认仓库</th>
-                                                <th>状态</th>
-                                                <th>操作</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr th:each="material : ${materialsPage.content}">
-                                                <td th:text="${material.materialCode}"></td>
-                                                <td th:text="${material.materialName}"></td>
-                                                <td th:text="${material.specification ?: '-'}"></td>
-                                                <td th:text="${material.unit}"></td>
-                                                <td th:text="${material.materialProperty ?: '-'}"></td>
-                                                <td th:text="${material.auxiliaryProperty ?: '-'}"></td>
-                                                <td th:text="${material.warehouse ?: '-'}"></td>
-                                                <td>
-                                                    <span class="badge bg-success" th:if="${material.status == null or material.status == '启用'}">启用</span>
-                                                    <span class="badge bg-secondary" th:unless="${material.status == null or material.status == '启用'}" 
-                                                          th:text="${material.status ?: '未知'}"></span>
-                                                </td>
-                                                <!-- 添加链接到零件详细信息页面 -->
-                                                <td>
-                                                    <a th:href="@{/material/{id}(id=${material.id})}" class="btn btn-sm btn-primary">查看详情</a>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                
-                                <!-- 分页 -->
-                                <nav aria-label="零件信息分页" th:if="${materialsPage.totalPages > 1}">
-                                    <ul class="pagination">
-                                        <li class="page-item" th:classappend="${materialsPage.first} ? 'disabled'">
-                                            <a class="page-link" 
-                                               th:href="@{/parts-query(page=${materialsPage.number - 1}, size=${materialsPage.size}, keyword=${keyword})}"
-                                               aria-label="上一页">
-                                                <span aria-hidden="true">&laquo;</span>
-                                            </a>
-                                        </li>
-                                        
-                                        <li class="page-item" th:each="i : ${#numbers.sequence(0, materialsPage.totalPages - 1)}" 
-                                            th:classappend="${i == materialsPage.number} ? 'active'">
-                                            <a class="page-link" 
-                                               th:href="@{/parts-query(page=${i}, size=${materialsPage.size}, keyword=${keyword})}"
-                                               th:text="${i + 1}"></a>
-                                        </li>
-                                        
-                                        <li class="page-item" th:classappend="${materialsPage.last} ? 'disabled'">
-                                            <a class="page-link" 
-                                               th:href="@{/parts-query(page=${materialsPage.number + 1}, size=${materialsPage.size}, keyword=${keyword})}"
-                                               aria-label="下一页">
-                                                <span aria-hidden="true">&raquo;</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                    
-                                    <div class="text-center text-muted">
-                                        显示第 <span th:text="${materialsPage.number * materialsPage.size + 1}"></span> - 
-                                        <span th:text="${materialsPage.number * materialsPage.size + materialsPage.numberOfElements}"></span> 条，
-                                        共 <span th:text="${materialsPage.totalElements}"></span> 条记录
-                                    </div>
-                                </nav>
+                        <div th:if="${materialsPage == null}">
+                            <div class="alert alert-info" role="alert">
+                                <i class="bi bi-info-circle me-2"></i>
+                                请输入关键词搜索零件信息
                             </div>
-                            
-                            <div th:if="${materialsPage == null}">
-                                <div class="alert alert-info" role="alert">
-                                    <i class="bi bi-info-circle me-2"></i>
-                                    请输入关键词搜索零件信息
-                                </div>
-                            </div>
-                            
-                            <div th:if="${materialsPage != null and materialsPage.totalElements == 0 and keyword != null}">
-                                <div class="alert alert-info" role="alert">
-                                    <i class="bi bi-info-circle me-2"></i>
-                                    没有找到与 "<span th:text="${keyword}"></span>" 相关的零件信息
-                                </div>
+                        </div>
+
+                        <div th:if="${materialsPage != null and materialsPage.totalElements == 0 and keyword != null}">
+                            <div class="alert alert-info" role="alert">
+                                <i class="bi bi-info-circle me-2"></i>
+                                没有找到与 "<span th:text="${keyword}"></span>" 相关的零件信息
                             </div>
                         </div>
                     </div>
                 </div>
-            </main>
-        </div>
+            </div>
+        </main>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // 页面加载完成后获取低库存零件信息
-        document.addEventListener('DOMContentLoaded', function() {
-            fetchLowStockItems();
-        });
-        
-        // 获取低库存零件信息
-        function fetchLowStockItems() {
-            fetch('/api/low-stock-items')
-                .then(response => response.json())
-                .then(data => {
-                    const container = document.getElementById('lowStockItems');
-                    if (data.length === 0) {
-                        container.innerHTML = '<div class="alert alert-info">暂无低库存预警信息</div>';
-                        return;
-                    }
-                    
-                    let html = '';
-                    data.slice(0, 5).forEach(item => {
-                        html += `
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // 页面加载完成后获取低库存零件信息
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchLowStockItems();
+    });
+
+    // 获取低库存零件信息
+    function fetchLowStockItems() {
+        fetch('/api/low-stock-items')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('lowStockItems');
+                if (data.length === 0) {
+                    container.innerHTML = '<div class="alert alert-info">暂无低库存预警信息</div>';
+                    return;
+                }
+
+                let html = '';
+                data.slice(0, 5).forEach(item => {
+                    html += `
                             <div class="low-stock-item">
                                 <div class="d-flex justify-content-between">
-                                    <strong>${item.materialCode || item.material_code}</strong>
-                                    <span class="badge bg-danger low-stock-badge">库存: ${item.currentStock !== undefined ? item.currentStock : item.current_stock}</span>
+                                    <strong>${item.materialName || item.material_name || '未定义'}</strong>
+                                    <span class="badge bg-danger low-stock-badge">库存: ${item.currentStock !== undefined ? item.currentStock : item.current_stock || 0}</span>
                                 </div>
-                                <div class="text-muted small">${item.materialName || item.material_name}</div>
+                                <div class="text-muted small">${item.specification || '无规格信息'}</div>
                             </div>
                         `;
-                    });
-                    
-                    if (data.length > 5) {
-                        html += `<div class="text-center mt-2"><a href="/warehouse" class="btn btn-sm btn-outline-primary">查看更多</a></div>`;
-                    }
-                    
-                    container.innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('获取低库存零件信息失败:', error);
-                    document.getElementById('lowStockItems').innerHTML = '<div class="alert alert-warning">获取低库存信息失败</div>';
                 });
-        }
-    </script>
+
+                if (data.length > 5) {
+                    html += `<div class="text-center mt-2"><a href="/warehouse" class="btn btn-sm btn-outline-primary">查看更多</a></div>`;
+                }
+
+                container.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('获取低库存零件信息失败:', error);
+                document.getElementById('lowStockItems').innerHTML = '<div class="alert alert-warning">获取低库存信息失败</div>';
+            });
+    }
+</script>
 </body>
 </html>

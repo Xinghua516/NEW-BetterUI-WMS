@@ -1,0 +1,7 @@
+{
+    "version": "1.0",
+    "name": "WMS仓库管理系统",
+    "description": "仓库管理系统的Chrome开发者工具配置文件",
+    "devtools_file": "devtools/front_end/main/Main.js",
+    "type": "module"
+}

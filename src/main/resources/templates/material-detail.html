@@ -70,7 +70,7 @@
                             <td th:text="${record.type}"></td>
                             <td th:text="${record.quantity}"></td>
                             <td th:text="${record.operator ?: '-'}"></td>
-                            <td th:text="${#dates.format(record.time, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                            <td th:text="${record.time}"></td>
                         </tr>
                     </tbody>
                 </table>

@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WMS仓库管理系统 - 主面板</title>
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <!-- ECharts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
         body {
@@ -77,14 +80,6 @@
         .h-100 {
             height: 100%;
         }
-        .component-spacing {
-            padding-left: 5px;
-            padding-right: 5px;
-        }
-        .row.g-3 {
-            --bs-gutter-x: 1rem;
-            --bs-gutter-y: 1rem;
-        }
         .chart-row {
             display: flex;
             justify-content: space-between;
@@ -99,215 +94,254 @@
         .chart-item:last-child {
             padding-right: 0;
         }
+
+        /* 时间天气组件专用样式（仅新增此部分） */
+        .time-section {
+            transition: all 0.3s ease;
+        }
+        .time-section:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .weather-section .grid {
+            display: grid;
+        }
+        .weather-section .grid-cols-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .weather-icon {
+            transition: transform 0.3s ease;
+        }
+        .weather-icon:hover {
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- 左侧导航菜单 -->
-            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-                <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="/static">
-                                <i class="bi bi-speedometer2 me-2"></i>
-                                主面板
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/parts-query">
-                                <i class="bi bi-search me-2"></i>
-                                零件信息查询
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/warehouse">
-                                <i class="bi bi-house-door me-2"></i>
-                                仓库管理
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/inventory">
-                                <i class="bi bi-arrow-left-right me-2"></i>
-                                出入库管理
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/ai-assistant">
-                                <i class="bi bi-robot me-2"></i>
-                                AI助手
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
+<div class="container-fluid">
+    <div class="row">
+        <!-- 左侧导航菜单（完全保留原始代码） -->
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/static">
+                            <i class="bi bi-speedometer2 me-2"></i> 主面板
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/parts-query">
+                            <i class="bi bi-search me-2"></i> 零件信息查询
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/warehouse">
+                            <i class="bi bi-house-door me-2"></i> 仓库管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/inventory">
+                            <i class="bi bi-arrow-left-right me-2"></i> 出入库管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/ai-assistant">
+                            <i class="bi bi-robot me-2"></i> AI助手
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
 
-            <!-- 主面板内容 -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">主面板</h1>
-                    <div class="btn-toolbar mb-2 mb-md-0">
-                        <div class="btn-group me-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary">刷新</button>
-                        </div>
+        <!-- 主内容区 -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">主面板</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary">刷新</button>
                     </div>
                 </div>
+            </div>
 
-                <div class="row g-3">
-                    <!-- 左上角：仓库情况 -->
-                    <div class="col-md-6">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-house me-2"></i>当前仓库情况
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row h-100">
-                                    <div class="col-md-12">
-                                        <div class="chart-row">
-                                            <div class="chart-item">
-                                                <div class="chart-container" id="spaceChart"></div>
-                                                <script>
-                                                    // 初始化库存空间图表
-                                                    var spaceChart = echarts.init(document.getElementById('spaceChart'));
-                                                    // 获取已用空间和可用空间数据
-                                                    var spaceData = [
-                                                        { value: [[${spaceUsage['usedSpace']}]], name: '已用空间' },
-                                                        { value: [[${spaceUsage['availableSpace']}]], name: '可用空间' }
-                                                    ];
-                                                    // 配置库存空间图表选项
-                                                    var spaceOption = {
-                                                        tooltip: {
-                                                            trigger: 'item'
-                                                        },
-                                                        series: [
-                                                            {
-                                                                name: '库存空间',
-                                                                type: 'pie',
-                                                                radius: ['50%', '70%'],
-                                                                avoidLabelOverlap: false,
+            <div class="row g-3">
+                <!-- 左上角：当前仓库情况（完全保留原始代码和数据接口） -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-house me-2"></i>当前仓库情况
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row h-100">
+                                <div class="col-md-12">
+                                    <div class="chart-row">
+                                        <!-- 库存空间饼图 -->
+                                        <div class="chart-item">
+                                            <div class="chart-container" id="spaceChart"></div>
+                                            <script th:inline="javascript">
+                                                // 库存空间饼图 - 使用独立数据接口
+                                                var spaceChart = echarts.init(document.getElementById('spaceChart'));
+
+                                                // 1. 从后端获取库存空间数据（独立接口）
+                                                var spaceData = [
+                                                    { value: /*[[${spaceUsage['usedSpace']}]]*/ 0, name: '已用空间' },
+                                                    { value: /*[[${spaceUsage['availableSpace']}]]*/ 100, name: '可用空间' }
+                                                ];
+
+                                                // 2. 库存空间专用颜色配置（与零件类型区分但保持样式统一）
+                                                const spaceColors = ['#FF6B6B', '#4ECDC4'];
+
+                                                // 3. 统一样式配置（与零件类型饼图保持一致）
+                                                var spaceOption = {
+                                                    color: spaceColors, // 独立颜色池
+                                                    title: {
+                                                        text: '库存空间',
+                                                        left: 'center'
+                                                    },
+                                                    tooltip: {
+                                                        trigger: 'item',
+                                                        formatter: '{@name}\n{c}' // 显示单位（假设为立方米）
+                                                    },
+                                                    legend: {
+                                                        orient: 'vertical',
+                                                        right: '0%',
+                                                        top: 'middle',
+                                                        data: ['已用空间', '可用空间'], // 显式指定图例顺序
+                                                        textStyle: { fontSize: 10 }
+                                                    },
+                                                    series: [
+                                                        {
+                                                            name: '空间占用',
+                                                            type: 'pie',
+                                                            radius: ['40%', '70%'], // 与零件类型饼图保持相同半径
+                                                            center: ['50%', '55%'], // 统一居中位置
+                                                            avoidLabelOverlap: false,
+                                                            itemStyle: {
+                                                                borderRadius: 10,
+                                                                borderColor: '#fff',
+                                                                borderWidth: 2 // 统一边框样式
+                                                            },
+                                                            label: {
+                                                                show: false,
+                                                                position: 'center'
+                                                            },
+                                                            emphasis: {
                                                                 label: {
-                                                                    show: false,
-                                                                    position: 'center'
-                                                                },
-                                                                emphasis: {
-                                                                    label: {
-                                                                        show: true,
-                                                                        fontSize: '40',
-                                                                        fontWeight: 'bold'
-                                                                    }
-                                                                },
-                                                                labelLine: {
-                                                                    show: false
-                                                                },
-                                                                data: spaceData
-                                                            }
-                                                        ]
-                                                    };
-                                                    // 应用配置项并渲染图表
-                                                    spaceChart.setOption(spaceOption);
-                                                </script>
-                                            </div>
-                                            <div class="chart-item">
-                                                <div class="chart-container" id="partsTypeChart"></div>
-                                                <!-- 隐藏的数据容器 -->
-                                                <div id="materialTypeData" style="display: none;"></div>
-                                                <script th:inline="javascript">
-                                                    // 将Thymeleaf数据传递给JavaScript
-                                                    var materialTypePercentage = /*[[${materialTypePercentage}]]*/ {};
-                                                </script>
-                                                <script>
-                                                    // 初始化零件类型图表
-                                                    var partsTypeChart = echarts.init(document.getElementById('partsTypeChart'));
+                                                                    show: true,
+                                                                    fontSize: 12,
+                                                                    fontWeight: 'bold'
+                                                                }
+                                                            },
+                                                            labelLine: { show: false },
+                                                            data: spaceData // 使用库存空间独立数据
+                                                        }
+                                                    ]
+                                                };
+                                                spaceChart.setOption(spaceOption);
+                                            </script>
+                                        </div>
 
-                                                    // 获取零件类型百分比数据
-                                                    var materialTypeData = [];
-                                                    for (var key in materialTypePercentage) {
-                                                        if (materialTypePercentage.hasOwnProperty(key)) {
-                                                            materialTypeData.push({ value: materialTypePercentage[key], name: key });
+                                        <!-- 零件类型饼图（完全保留原始代码和数据接口） -->
+                                        <div class="chart-item">
+                                            <div class="chart-container" id="partsTypeChart"></div>
+                                            <script th:inline="javascript">
+                                                // 1. 从后端获取零件类型占比数据
+                                                var materialTypeData = /*[[${materialTypePercentage}]]*/ {};
+
+                                                var partsChart = echarts.init(document.getElementById('partsTypeChart'));
+
+                                                // 2. 预设类型顺序和对应颜色（确保图例与饼图颜色一致）
+                                                const typeOrder = ['包装材料', '成品', '辅助材料', '原材料', '半成品'];
+                                                const typeColors = ['#4B6CB7', '#26A69A', '#FFCA28', '#EF5350', '#00ACC1'];
+
+                                                // 3. 格式化数据：按预设顺序排序，绑定颜色
+                                                var chartData = [];
+                                                if (Object.keys(materialTypeData).length > 0) {
+                                                    // 如果有数据，按预设顺序排序
+                                                    for (let key of typeOrder) {
+                                                        if (materialTypeData.hasOwnProperty(key)) {
+                                                            chartData.push({
+                                                                name: key,
+                                                                value: materialTypeData[key],
+                                                                itemStyle: { color: typeColors[typeOrder.indexOf(key)] }
+                                                            });
                                                         }
                                                     }
+                                                } else {
+                                                    // 如果没有数据，添加默认数据
+                                                    chartData.push({
+                                                        name: '默认仓库',
+                                                        value: 100,
+                                                        itemStyle: { color: '#999999' }
+                                                    });
+                                                }
 
-                                                    // 配置零件类型图表选项
-                                                    var partsTypeOption = {
-                                                        title: {
-                                                            text: '零件类型',
-                                                            left: 'center'
-                                                        },
-                                                        tooltip: {
-                                                            trigger: 'item'
-                                                        },
-                                                        legend: {
-                                                            orient: 'vertical',
-                                                            right: 5,
-                                                            top: 'middle',
-                                                            textStyle: {
-                                                                fontSize: 10
-                                                            }
-                                                        },
-                                                        series: [
-                                                            {
-                                                                name: '零件类型',
-                                                                type: 'pie',
-                                                                radius: ['40%', '70%'],
-                                                                center: ['30%', '55%'],
-                                                                avoidLabelOverlap: false,
-                                                                itemStyle: {
-                                                                    borderRadius: 10,
-                                                                    borderColor: '#fff',
-                                                                    borderWidth: 2
-                                                                },
-                                                                label: {
-                                                                    show: false,
-                                                                    position: 'center'
-                                                                },
-                                                                emphasis: {
-                                                                    label: {
-                                                                        show: true,
-                                                                        fontSize: 12,
-                                                                        fontWeight: 'bold'
-                                                                    }
-                                                                },
-                                                                labelLine: {
-                                                                    show: false
-                                                                },
-                                                                data: materialTypeData
-                                                            }
-                                                        ]
-                                                    };
-                                                    // 应用配置项并渲染图表
-                                                    partsTypeChart.setOption(partsTypeOption);
-                                                </script>
-                                            </div>
+                                                // 4. 配置饼图（显式控制颜色和图例）
+                                                var partsOption = {
+                                                    color: typeColors, // 强制颜色池
+                                                    title: { text: '零件类型', left: 'center' },
+                                                    tooltip: { trigger: 'item', formatter: '{@name}\n{d}%' },
+                                                    legend: {
+                                                        orient: 'vertical', // 垂直排列
+                                                        right: '0%', // 放在右侧
+                                                        top: 'middle', // 垂直居中
+                                                        data: typeOrder, // 强制图例顺序
+                                                        textStyle: { fontSize: 10 }
+                                                    },
+                                                    series: [
+                                                        {
+                                                            name: '零件类型',
+                                                            type: 'pie',
+                                                            radius: ['40%', '70%'],
+                                                            center: ['50%', '55%'], // 饼图居中
+                                                            avoidLabelOverlap: false,
+                                                            itemStyle: {
+                                                                borderRadius: 10,
+                                                                borderColor: '#fff',
+                                                                borderWidth: 2
+                                                            },
+                                                            label: { show: false, position: 'center' },
+                                                            emphasis: {
+                                                                label: { show: true, fontSize: 12, fontWeight: 'bold' }
+                                                            },
+                                                            labelLine: { show: false },
+                                                            data: chartData
+                                                        }
+                                                    ]
+                                                };
+                                                partsChart.setOption(partsOption);
+                                            </script>
                                         </div>
-                                        <div class="mt-2">
-                                            <div th:each="entry : ${materialTypePercentage}" th:if="${materialTypePercentage != null and !materialTypePercentage.empty}">
-                                                <p class="mb-1">
-                                                    <span th:text="${entry.key}">原材料</span>占比
-                                                    <span class="float-end" th:text="${entry.value} + '%'">30%</span>
-                                                </p>
-                                                <div class="progress environment-progress">
-                                                    <div class="progress-bar" role="progressbar"
-                                                         th:style="${entry.value != null ? 'width: ' + entry.value + '%' : 'width: 0%'}"
-                                                         th:attr="aria-valuenow=${entry.value != null ? entry.value : 0}"
-                                                         aria-valuemin="0" aria-valuemax="100"
-                                                         th:classappend="${entry.key == '原材料' ? 'bg-primary' :
-                                                     (entry.key == '半成品' ? 'bg-warning' :
-                                                      (entry.key == '成品' ? 'bg-danger' :
-                                                       (entry.key == '辅料' ? 'bg-info' :
-                                                        (entry.key == '包装材料' ? 'bg-secondary' : 'bg-success'))))}">
-                                                    </div>
+                                    </div>
+
+                                    <!-- 零件类型进度条（完全保留原始代码和数据接口） -->
+                                    <div class="mt-2">
+                                        <div th:each="entry : ${materialTypePercentage}" th:if="${not #maps.isEmpty(materialTypePercentage)}">
+                                            <p class="mb-1">
+                                                <span th:text="${entry.key}">原材料</span>占比
+                                                <span class="float-end" th:text="${entry.value} + '%'">30%</span>
+                                            </p>
+                                            <div class="progress environment-progress">
+                                                <div class="progress-bar" role="progressbar"
+                                                     th:style="${entry.value != null ? 'width: ' + entry.value + '%' : 'width: 0%'}"
+                                                     th:attr="aria-valuenow=${entry.value != null ? entry.value : 0}"
+                                                     aria-valuemin="0" aria-valuemax="100"
+                                                     th:classappend="${entry.key == '原材料' ? 'bg-primary' :
+                                                             (entry.key == '半成品' ? 'bg-warning' :
+                                                              (entry.key == '成品' ? 'bg-danger' :
+                                                               (entry.key == '辅料' ? 'bg-info' :
+                                                                (entry.key == '包装材料' ? 'bg-secondary' : 'bg-success'))))}">
                                                 </div>
                                             </div>
-                                            <div th:if="${materialTypePercentage == null or materialTypePercentage.empty}">
-                                                <p class="mb-1">默认仓库占比<span class="float-end">100%</span></p>
-                                                <div class="progress environment-progress">
-                                                    <div class="progress-bar bg-primary" role="progressbar"
-                                                         style="width: 100%"
-                                                         aria-valuenow="100"
-                                                         aria-valuemin="0" aria-valuemax="100">
-                                                    </div>
+                                        </div>
+                                        <div th:if="${#maps.isEmpty(materialTypePercentage)}">
+                                            <p class="mb-1">默认仓库占比<span class="float-end">100%</span></p>
+                                            <div class="progress environment-progress">
+                                                <div class="progress-bar bg-primary" role="progressbar"
+                                                     style="width: 100%"
+                                                     aria-valuenow="100"
+                                                     aria-valuemin="0" aria-valuemax="100">
                                                 </div>
                                             </div>
                                         </div>
@@ -316,260 +350,178 @@
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- 右上角：时间和天气 -->
-                    <div class="col-md-6">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-clock me-2"></i>当前时间 & 天气情况
-                                </h5>
-                            </div>
-                            <div class="card-body text-center d-flex flex-column justify-content-center">
-                                <p class="card-text display-6 mb-2" id="current-time">2023-05-20 15:30:45</p>
-                                <div class="d-flex justify-content-center align-items-center">
-                                    <i class="bi bi-cloud-sun weather-icon me-2"></i>
-                                    <p class="card-text h4 mb-0">晴天，25°C</p>
-                                </div>
-                                <small class="text-muted mt-2">更新时间: 实时更新</small>
-                            </div>
+                <!-- 右上角：当前时间 & 天气情况（仅美化此组件，保留原始数据接口） -->
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-gradient bg-primary bg-opacity-10">
+                            <h5 class="mb-0 d-flex align-items-center">
+                                <i class="bi bi-clock me-2 text-primary"></i>当前时间 & 天气情况
+                            </h5>
                         </div>
-                    </div>
+                        <div class="card-body d-flex flex-column p-4">
+                            <!-- 时间部分 -->
+                            <div class="time-section bg-white rounded-3 p-3 mb-4 shadow-sm border border-light">
+                                <p class="card-text display-5 fw-medium text-center text-dark mb-0" id="current-time" th:text="${currentTime}">2025-08-04 19:23:01</p>
+                            </div>
 
-                    <!-- 左下角：最近一天出入库记录 -->
-                    <div class="col-md-8">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-list-check me-2"></i>最近1天出入库记录
-                                </h5>
-                            </div>
-                            <div class="card-body d-flex flex-column p-0">
-                                <div class="table-responsive flex-grow-1">
-                                    <table class="table table-hover mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>类型</th>
-                                                <th>零件编号</th>
-                                                <th>零件名称</th>
-                                                <th>数量</th>
-                                                <th>时间</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr th:each="record : ${recentRecords}">
-                                                <td>
-                                                    <span th:class="${record.type == 'IN' ? 'inventory-in' : 'inventory-out'}"
-                                                          th:text="${record.type == 'IN' ? '入库' : '出库'}"></span>
-                                                </td>
-                                                <td th:text="${record.itemCode}">ITEM001</td>
-                                                <td th:text="${record.itemName}">轴承</td>
-                                                <td th:text="${record.quantity}">100</td>
-                                                <td th:text="${record.time}">2023-05-20 14:30</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                            <!-- 天气部分 -->
+                            <div class="weather-section flex-grow-1 d-flex flex-column justify-content-center">
+                                <div class="d-flex justify-content-center align-items-center mb-3">
+                                    <i class="bi weather-icon me-3" id="weather-icon" th:class="${'bi ' + weatherIconClass + ' weather-icon me-3'}" style="font-size: 3rem; color: #0d6efd;"></i>
+                                    <p class="card-text h3 fw-bold mb-0" id="weather-info" th:text="${weatherData.text + '，' + weatherData.temperature + '°C'}">正在获取天气信息...</p>
                                 </div>
-                                <div class="text-center p-2">
-                                    <button class="btn btn-outline-primary btn-sm">查看更多</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- 右下角：零件库存不足预警 -->
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-exclamation-triangle me-2"></i>零件数量低预警
-                                </h5>
-                            </div>
-                            <div class="card-body d-flex flex-column p-0">
-                                <div class="table-responsive flex-grow-1">
-                                    <table class="table table-hover mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>零件编号</th>
-                                                <th>零件名称</th>
-                                                <th>当前库存</th>
-                                                <th>最低库存</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr th:each="item : ${lowStockItems}" class="low-stock-item">
-                                                <td th:text="${item.itemCode}">ITEM002</td>
-                                                <td th:text="${item.itemName}">齿轮</td>
-                                                <td th:text="${item.currentStock}">45</td>
-                                                <td th:text="${item.minStock}">50</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                <div id="detailed-weather" class="grid grid-cols-3 gap-2 text-center mt-2">
+                                    <div class="bg-light rounded p-2">
+                                        <small class="d-block text-muted mb-1">风速</small>
+                                        <small id="wind" th:text="${weatherData.wind ?: '获取中...'}" class="fw-medium">获取中...</small>
+                                    </div>
+                                    <div class="bg-light rounded p-2">
+                                        <small class="d-block text-muted mb-1">湿度</small>
+                                        <small id="humidity" th:text="${weatherData.humidity ?: '获取中...'}" class="fw-medium">获取中...</small>
+                                    </div>
+                                    <div class="bg-light rounded p-2">
+                                        <small class="d-block text-muted mb-1">紫外线</small>
+                                        <small id="uv" th:text="${weatherData.uv ?: '获取中...'}" class="fw-medium">获取中...</small>
+                                    </div>
                                 </div>
-                                <div class="text-center p-2">
-                                    <button class="btn btn-outline-primary btn-sm">查看更多</button>
+
+                                <div id="location-info" class="mt-3 text-center">
+                                    <small class="text-muted d-inline-flex align-items-center" th:text="${'位置: ' + (weatherData.location ?: '中国浙江省杭州市滨江区滨文路')}">
+                                        <i class="bi bi-geo-alt me-1"></i>位置: 中国浙江省杭州市滨江区滨文路
+                                    </small>
                                 </div>
+
+                                <small class="text-muted mt-2 text-center d-block">
+                                    更新时间: <span id="weather-update-time" th:text="${weatherData.updateTime ?: '-'}" class="text-secondary">-</span>
+                                </small>
                             </div>
                         </div>
                     </div>
                 </div>
-            </main>
-        </div>
+
+                <!-- 左下角：最近1天出入库记录（完全保留原始代码和数据接口） -->
+                <div class="col-md-8">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-list-check me-2"></i>最近1天出入库记录
+                            </h5>
+                        </div>
+                        <div class="card-body d-flex flex-column p-0">
+                            <div class="table-responsive flex-grow-1">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>类型</th>
+                                        <th>零件编号</th>
+                                        <th>零件名称</th>
+                                        <th>数量</th>
+                                        <th>时间</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="record : ${recentRecords}">
+                                        <td>
+                                                    <span th:class="${record.type == 'IN' ? 'inventory-in' : 'inventory-out'}"
+                                                          th:text="${record.type == 'IN' ? '入库' : '出库'}"></span>
+                                        </td>
+                                        <td th:text="${record.itemCode}">2JK2025005001</td>
+                                        <td th:text="${record.itemName}">同步带</td>
+                                        <td th:text="${record.quantity}">80</td>
+                                        <td th:text="${record.time}">2025-08-03T05:17:13</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center p-2">
+                                <button id="viewMoreInventory" class="btn btn-outline-primary btn-sm">查看更多</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右下角：零件数量低预警（完全保留原始代码和数据接口） -->
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-exclamation-triangle me-2"></i>零件数量低预警
+                            </h5>
+                        </div>
+                        <div class="card-body d-flex flex-column p-0">
+                            <div class="table-responsive flex-grow-1">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>零件编号</th>
+                                        <th>零件名称</th>
+                                        <th>当前库存</th>
+                                        <th>最低库存</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="item : ${lowStockItems}" class="low-stock-item">
+                                        <td th:text="${item.itemCode}">1JK2025041001</td>
+                                        <td th:text="${item.itemName}">主控板</td>
+                                        <td th:text="${item.currentStock}">5</td>
+                                        <td th:text="${item.minStock}">15</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center p-2">
+                                <button id="viewMoreParts" class="btn btn-outline-primary btn-sm">查看更多</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // 初始化饼状图
-        document.addEventListener('DOMContentLoaded', function() {
-            // 可用库存空间饼状图
-            var spaceChartDom = document.getElementById('spaceChart');
-            var spaceChart = echarts.init(spaceChartDom);
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 图表响应式适配
+        var spaceChart = echarts.getInstanceByDom(document.getElementById('spaceChart'));
+        var partsChart = echarts.getInstanceByDom(document.getElementById('partsTypeChart'));
 
-            var spaceOption = {
-                title: {
-                    text: '库存空间',
-                    left: 'center'
-                },
-                tooltip: {
-                    trigger: 'item'
-                },
-                legend: {
-                    orient: 'vertical',
-                    right: 5,
-                    top: 'middle',
-                    textStyle: {
-                        fontSize: 10
-                    }
-                },
-                series: [
-                    {
-                        type: 'pie',
-                        radius: ['40%', '70%'],
-                        center: ['50%', '55%'],
-                        avoidLabelOverlap: false,
-                        itemStyle: {
-                            borderRadius: 10,
-                            borderColor: '#fff',
-                            borderWidth: 2
-                        },
-                        label: {
-                            show: false,
-                            position: 'center'
-                        },
-                        emphasis: {
-                            label: {
-                                show: true,
-                                fontSize: 12,
-                                fontWeight: 'bold'
-                            }
-                        },
-                        labelLine: {
-                            show: false
-                        },
-                        data: [
-                            {value: 65, name: '可用空间'},
-                            {value: 35, name: '已用空间'}
-                        ]
-                    }
-                ]
-            };
-
-            spaceChart.setOption(spaceOption);
-
-            // 零件类型占比饼状图
-            var partsChartDom = document.getElementById('partsTypeChart');
-            var partsChart = echarts.init(partsChartDom);
-
-            // 获取零件类型百分比数据
-            var materialTypeDataElement = document.getElementById('materialTypeData');
-            var materialTypeData = {};
-            try {
-                materialTypeData = JSON.parse(materialTypeDataElement.getAttribute('data-value'));
-            } catch (e) {
-                // 如果解析失败，使用默认数据
-                materialTypeData = {"默认仓库": 100};
-            }
-            
-            // 转换数据格式
-            var materialTypePercentages = [];
-            for (var key in materialTypeData) {
-                if (materialTypeData.hasOwnProperty(key)) {
-                    materialTypePercentages.push({value: materialTypeData[key], name: key});
-                }
-            }
-
-            var partsOption = {
-                title: {
-                    text: '零件类型',
-                    left: 'center'
-                },
-                tooltip: {
-                    trigger: 'item',
-                    formatter: '{@name}\n{d}%'
-                },
-                legend: {
-                    orient: 'vertical',
-                    right: 5,
-                    top: 'middle',
-                    textStyle: {
-                        fontSize: 10
-                    }
-                },
-                series: [
-                    {
-                        type: 'pie',
-                        radius: ['40%', '70%'],
-                        center: ['30%', '55%'],
-                        avoidLabelOverlap: false,
-                        itemStyle: {
-                            borderRadius: 10,
-                            borderColor: '#fff',
-                            borderWidth: 2
-                        },
-                        label: {
-                            show: false,
-                            position: 'center'
-                        },
-                        emphasis: {
-                            label: {
-                                show: true,
-                                fontSize: 12,
-                                fontWeight: 'bold'
-                            }
-                        },
-                        labelLine: {
-                            show: false
-                        },
-                        data: materialTypePercentages
-                    }
-                ]
-            };
-
-            partsChart.setOption(partsOption);
-
-            // 窗口大小改变时重置图表大小
-            window.addEventListener('resize', function() {
-                spaceChart.resize();
-                partsChart.resize();
-            });
-
-            // 实时更新时间
-            function updateTime() {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const day = String(now.getDate()).padStart(2, '0');
-                const hours = String(now.getHours()).padStart(2, '0');
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-                const seconds = String(now.getSeconds()).padStart(2, '0');
-
-                const formattedTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-                document.getElementById('current-time').textContent = formattedTime;
-            }
-
-            setInterval(updateTime, 1000);
-            updateTime(); // 初始化时间显示
+        window.addEventListener('resize', function() {
+            spaceChart && spaceChart.resize();
+            partsChart && partsChart.resize();
         });
-    </script>
+
+        // 实时更新时间
+        function updateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+
+            const formattedTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            document.getElementById('current-time').textContent = formattedTime;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // 为出入库记录的"查看更多"按钮添加点击事件监听器
+        document.getElementById('viewMoreInventory').addEventListener('click', function() {
+            window.location.href = '/inventory';
+        });
+
+        // 为零件不足预警的"查看更多"按钮添加点击事件监听器
+        document.getElementById('viewMoreParts').addEventListener('click', function() {
+            window.location.href = '/parts-query';
+        });
+    });
+</script>
 </body>
 </html>

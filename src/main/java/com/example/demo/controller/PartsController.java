@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,23 +47,45 @@ public class PartsController {
     }
     
     @GetMapping("/parts-query")
-    public String partsQuery(Model model,
-                          @RequestParam(defaultValue = "0") int page,
-                          @RequestParam(defaultValue = "10") int size,
-                          @RequestParam(required = false) String keyword) {
-        Pageable pageable = PageRequest.of(page, size);
-        
-        Page<Material> materialsPage;
-        if (keyword != null && !keyword.isEmpty()) {
-            materialsPage = materialRepository.findByMaterialCodeContainingOrMaterialNameContaining(
-                keyword, keyword, pageable);
-        } else {
-            materialsPage = materialRepository.findAll(pageable);
+    public String partsQuery(
+            Model model,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword) {
+        try {
+            // 查询所有低库存零件
+            List<LowStockItem> lowStockItems = lowStockItemRepository.findAllByOrderByCurrentStockAsc();
+            
+            // 将低库存零件列表添加到模型中
+            model.addAttribute("lowStockItems", lowStockItems);
+            
+            // 分页查询materials数据
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Material> materialsPage;
+            
+            if (keyword != null && !keyword.isEmpty()) {
+                // 如果有搜索关键词，执行搜索
+                materialsPage = materialRepository.findByMaterialCodeContainingOrMaterialNameContaining(
+                        keyword, keyword, pageable);
+            } else {
+                // 否则获取所有零件信息
+                materialsPage = materialRepository.findAll(pageable);
+            }
+            
+            model.addAttribute("materialsPage", materialsPage);
+            model.addAttribute("keyword", keyword);
+            
+            // 同时添加一个标志表示是否查询成功
+            model.addAttribute("querySuccess", true);
+        } catch (Exception e) {
+            // 添加错误处理
+            e.printStackTrace();
+            model.addAttribute("error", "数据库查询出现错误：" + e.getMessage());
+            model.addAttribute("lowStockItems", new ArrayList<LowStockItem>()); // 添加空列表避免模板出错
+            model.addAttribute("querySuccess", false);
         }
         
-        model.addAttribute("materialsPage", materialsPage);
-        model.addAttribute("keyword", keyword);
-        return "parts-query";
+        return "parts-query"; // 返回对应的 Thymeleaf 模板
     }
     
     @GetMapping("/material/{id}")

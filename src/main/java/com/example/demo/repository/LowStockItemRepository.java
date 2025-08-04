@@ -6,12 +6,22 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface LowStockItemRepository extends JpaRepository<LowStockItem, Long> {
-    List<LowStockItem> findTop3ByOrderByCurrentStockAsc();
-    List<LowStockItem> findTop5ByOrderByCurrentStockAsc();
+
+    // 查询所有低库存零件
     List<LowStockItem> findAllByOrderByCurrentStockAsc();
+
+    // 查询前3个低库存零件
+    List<LowStockItem> findTop3ByOrderByCurrentStockAsc();
+
+    // 查询前5个低库存零件
+    List<LowStockItem> findTop5ByOrderByCurrentStockAsc();
+
+    // 根据物料ID查询低库存零件
+    Optional<LowStockItem> findByMaterialId(Long materialId);
 
     // 添加用于库存状态统计的查询方法
     @Query("SELECT COUNT(l) FROM LowStockItem l WHERE l.currentStock <= ?1")

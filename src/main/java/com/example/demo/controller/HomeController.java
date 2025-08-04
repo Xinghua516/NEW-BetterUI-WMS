@@ -6,6 +6,7 @@ import com.example.demo.entity.Material;
 import com.example.demo.repository.InventoryRecordRepository;
 import com.example.demo.repository.LowStockItemRepository;
 import com.example.demo.repository.MaterialRepository;
+import com.example.demo.service.WeatherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -29,6 +30,9 @@ public class HomeController {
     
     @Autowired
     private MaterialRepository materialRepository;
+    
+    @Autowired
+    private WeatherService weatherService;
     
     @GetMapping("/")
     public String index(Model model) {
@@ -65,6 +69,12 @@ public class HomeController {
             // 添加库存空间使用情况
             Map<String, Integer> spaceUsage = calculateSpaceUsage();
             model.addAttribute("spaceUsage", spaceUsage);
+            
+            // 添加天气信息
+            Map<String, Object> weatherData = weatherService.getWeatherData();
+            model.addAttribute("weatherData", weatherData);
+            model.addAttribute("weatherIconClass", weatherService.getWeatherIconClass((String) weatherData.get("code")));
+            
         } catch (Exception e) {
             // 如果出现任何异常，提供默认值确保页面可以正常显示
             model.addAttribute("totalItems", 0L);
@@ -81,6 +91,16 @@ public class HomeController {
             defaultSpaceUsage.put("usedSpace", 0);
             defaultSpaceUsage.put("availableSpace", 100);
             model.addAttribute("spaceUsage", defaultSpaceUsage);
+            
+            // 添加默认天气信息
+            Map<String, Object> defaultWeather = new HashMap<>();
+            defaultWeather.put("text", "无法获取天气信息");
+            defaultWeather.put("temperature", "--");
+            defaultWeather.put("code", "0");
+            defaultWeather.put("location", "未知位置");
+            defaultWeather.put("updateTime", "--");
+            model.addAttribute("weatherData", defaultWeather);
+            model.addAttribute("weatherIconClass", "bi-cloud-sun");
         }
         
         return "index";
