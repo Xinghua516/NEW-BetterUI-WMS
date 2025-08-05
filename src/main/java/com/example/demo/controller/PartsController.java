@@ -1,10 +1,12 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.BomHeader;
+import com.example.demo.entity.InventoryAlert;
 import com.example.demo.entity.InventoryRecord;
 import com.example.demo.entity.LowStockItem;
 import com.example.demo.entity.Material;
 import com.example.demo.repository.BomHeaderRepository;
+import com.example.demo.repository.InventoryAlertRepository;
 import com.example.demo.repository.InventoryRecordRepository;
 import com.example.demo.repository.LowStockItemRepository;
 import com.example.demo.repository.MaterialRepository;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 public class PartsController {
@@ -38,6 +41,9 @@ public class PartsController {
     @Autowired
     private LowStockItemRepository lowStockItemRepository;
     
+    @Autowired
+    private InventoryAlertRepository inventoryAlertRepository;
+    
     @GetMapping("/parts")
     public String parts(Model model) {
         // 获取BOM清单头信息
@@ -53,11 +59,7 @@ public class PartsController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword) {
         try {
-            // 查询所有低库存零件
-            List<LowStockItem> lowStockItems = lowStockItemRepository.findAllByOrderByCurrentStockAsc();
-            
-            // 将低库存零件列表添加到模型中
-            model.addAttribute("lowStockItems", lowStockItems);
+            // 库存预警数据现在通过前端调用 /api/inventory-alerts 接口获取，无需在此查询
             
             // 分页查询materials数据
             Pageable pageable = PageRequest.of(page, size);
@@ -81,13 +83,27 @@ public class PartsController {
             // 添加错误处理
             e.printStackTrace();
             model.addAttribute("error", "数据库查询出现错误：" + e.getMessage());
-            model.addAttribute("lowStockItems", new ArrayList<LowStockItem>()); // 添加空列表避免模板出错
+            model.addAttribute("lowStockItems", new ArrayList<InventoryAlert>()); // 添加空列表避免模板出错
             model.addAttribute("querySuccess", false);
         }
         
         return "parts-query"; // 返回对应的 Thymeleaf 模板
     }
-    
+        /**
+     * API端点：获取分页的库存预警数据
+     * @param page 页码（从0开始）
+     * @param size 每页大小
+     * @return 分页的库存预警数据
+     */
+    @GetMapping("/api/inventory-alerts")
+    @ResponseBody
+    public Page<InventoryAlert> getInventoryAlerts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "14") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return inventoryAlertRepository.findByOrderByCreatedAtDesc(pageable);
+    }
+
     @GetMapping("/material/{id}")
     public String materialDetail(@PathVariable Long id, Model model) {
         // 获取零件详细信息

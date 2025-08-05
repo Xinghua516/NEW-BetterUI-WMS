@@ -3,7 +3,7 @@ package com.example.demo.entity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -56,32 +56,39 @@ public class Material {
     @Column(name = "current_stock", nullable = true, columnDefinition = "INT")
     private Integer currentStock;
 
+    // 分类ID（外键关联分类表）
+    @Column(name = "category_id", nullable = true, columnDefinition = "BIGINT")
+    private Long categoryId;
+
     // 最低库存阈值（低于此值触发预警）
     @Column(name = "min_stock", nullable = true, columnDefinition = "INT")
     private Integer minStock;
+    
+    // 默认仓库ID（外键关联仓库表）
+    @Column(name = "default_warehouse_id", nullable = true, columnDefinition = "BIGINT")
+    private Long defaultWarehouseId;
+
+    // 条形码
+    @Column(name = "barcode", nullable = true, length = 100, columnDefinition = "VARCHAR(100)")
+    private String barcode;
+
+    // 供应商
+    @Column(name = "supplier", nullable = true, length = 100, columnDefinition = "VARCHAR(100)")
+    private String supplier;
 
     // 创建时间（自动生成）
     @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private Date createdAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     // 更新时间（自动生成）
     @UpdateTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "updated_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
-    private Date updatedAt;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     // 无参构造函数（JPA要求）
     public Material() {}
 
-    // 全参构造函数（用于测试数据初始化）
-    public Material(String materialCode, String materialName, String specification, String unit) {
-        this.materialCode = materialCode;
-        this.materialName = materialName;
-        this.specification = specification;
-        this.unit = unit;
-    }
 
     // Getter/Setter（完整生成）
 
@@ -173,19 +180,51 @@ public class Material {
         this.minStock = minStock;
     }
 
-    public Date getCreatedAt() {
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public Long getDefaultWarehouseId() {
+        return defaultWarehouseId;
+    }
+
+    public void setDefaultWarehouseId(Long defaultWarehouseId) {
+        this.defaultWarehouseId = defaultWarehouseId;
+    }
+
+    public String getBarcode() {
+        return barcode;
+    }
+
+    public void setBarcode(String barcode) {
+        this.barcode = barcode;
+    }
+
+    public String getSupplier() {
+        return supplier;
+    }
+
+    public void setSupplier(String supplier) {
+        this.supplier = supplier;
+    }
+
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Date getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(Date updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 }

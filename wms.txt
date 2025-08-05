@@ -1,0 +1,38 @@
+1. 物料分类表（material_categories）
+用途：对物料进行分级分类管理（如 “原材料→金属材料→钢材”），方便物料的组织、查询和统计。
+核心字段：id（分类 ID）、parent_id（父分类 ID，支持多级分类）、category_code（分类编码）、category_name（分类名称）。
+关联性：通过parent_id自关联，实现多级分类（如顶级分类的parent_id为NULL，子分类关联父分类的id）；被materials表的category_id关联（一个分类可包含多个物料）。
+2. 仓库信息表（warehouses）
+用途：存储仓库的基础信息，支持多仓库管理（如 “一号仓库”“二号仓库”）。
+核心字段：id（仓库 ID）、warehouse_code（仓库编码）、warehouse_name（仓库名称）、location（位置）、status（启用 / 停用状态）。
+关联性：被materials表的default_warehouse_id关联（物料默认存放的仓库）；被inventory（库存表）、inventory_transactions（出入库记录表）等表的warehouse_id关联（一个仓库可包含多个物料的库存和出入库记录）。
+3. 物料信息表（materials）
+用途：存储所有物料的基础信息，是整个系统的 “物料字典”，唯一标识物料。
+核心字段：id（物料 ID）、material_code（物料编码，唯一）、material_name（名称）、category_id（所属分类）、specification（规格）、unit（单位）、status（启用 / 停用）。
+关联性：通过category_id关联material_categories（一个物料属于一个分类）；通过default_warehouse_id关联warehouses（默认仓库）；被inventory（库存）、inventory_transactions（出入库）、inventory_alert_settings（预警设置）等表的material_id关联（所有与物料相关的操作都依赖此表）。
+4. 库存表（inventory）
+用途：记录每个物料在每个仓库的实时库存数量，是库存数据的 “单一数据源”。
+核心字段：id（库存记录 ID）、material_id（物料 ID）、warehouse_id（仓库 ID）、quantity（当前库存总量）、available_quantity（可用库存）、locked_quantity（锁定库存，如已下单但未出库）。
+关联性：通过material_id关联materials，通过warehouse_id关联warehouses；二者组合的唯一键（uk_material_warehouse）确保 “一个物料在一个仓库只有一条库存记录”；被inventory_alerts（预警表）关联，是预警判断的核心依据。
+5. 库存预警设置表（inventory_alert_settings）
+用途：存储每个物料的库存预警阈值（最低 / 最高库存），定义 “何时触发预警”。
+核心字段：id（设置 ID）、material_id（物料 ID）、warehouse_id（仓库 ID，NULL表示适用于所有仓库）、min_stock（最低库存阈值）、max_stock（最高库存阈值）。
+关联性：通过material_id关联materials，通过warehouse_id关联warehouses；为inventory_alerts（预警表）提供阈值数据，决定库存是否触发预警。
+6. 库存预警表（inventory_alerts）
+用途：记录当前需要处理的库存预警（如低库存、高库存），是业务人员的 “待办提醒”。
+核心字段：id（预警 ID）、material_id（物料 ID）、warehouse_id（仓库 ID）、alert_type（预警类型：LOW_STOCK/HIGH_STOCK）、current_quantity（当前库存）、threshold_value（阈值）、is_processed（是否已处理）。
+关联性：通过material_id关联materials，通过warehouse_id关联warehouses；数据由inventory表更新时的触发器自动生成（对比inventory_alert_settings的阈值），实现 “库存变动→自动预警” 的联动。
+7. 出入库类型表（inventory_transaction_types）
+用途：定义出入库操作的类型（如采购入库、销售出库），规范业务场景。
+核心字段：id（类型 ID）、type_code（类型编码，如PURCHASE_IN）、type_name（类型名称）、direction（方向：IN入库 /OUT出库）。
+关联性：被inventory_transactions（出入库记录表）的transaction_type_id关联（一条出入库记录属于一种操作类型）。
+8. 出入库记录表（inventory_transactions）
+用途：记录所有物料的出入库操作明细，是库存变动的 “审计日志”。
+核心字段：id（记录 ID）、transaction_no（交易单号，唯一）、transaction_type_id（操作类型）、material_id（物料 ID）、warehouse_id（仓库 ID）、quantity（数量，正数为入库，负数为出库）、transaction_time（操作时间）。
+关联性：通过transaction_type_id关联inventory_transaction_types（标记操作类型）；通过material_id和warehouse_id关联materials和warehouses；插入记录时，触发器会自动更新inventory表的库存数量（实现 “出入库→库存自动同步”）。
+核心关联关系总结
+各表通过外键形成 “以物料为中心，库存为核心” 的关联网络，关键数据流如下：
+
+基础数据层：material_categories（分类）→ materials（物料）→ warehouses（仓库），构成物料管理的基础框架。
+库存操作层：inventory_transactions（出入库记录）→ 触发库存更新 → inventory（实时库存），实现库存变动的闭环。
+预警联动层：inventory_alert_settings（阈值设置）→ inventory（库存变动）→ 触发预警 → inventory_alerts（预警记录），实现自动预警。

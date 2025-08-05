@@ -60,11 +60,11 @@ public class WarehouseController {
     }
     
     private int calculateTotalStock(Page<Material> materialsPage) {
-        // 直接使用Material对象中的currentStock属性计算总库存
+        // 使用MaterialRepository中的方法计算每个物料的库存
         return materialsPage.getContent().stream()
             .mapToInt(material -> {
-                Integer stock = material.getCurrentStock();
-                return stock != null ? stock : 0;
+                // 通过MaterialRepository的calculateStockByMaterialId方法获取库存
+                return materialRepository.calculateStockByMaterialId(material.getId());
             })
             .sum();
     }

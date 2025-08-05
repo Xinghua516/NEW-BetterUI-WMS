@@ -101,19 +101,25 @@
         .low-stock-item {
             padding: 12px 15px;
             margin-bottom: 10px;
-            background-color: #fff8e1;
-            border: 1px solid #ffeaa7;
-            border-radius: 6px;
+            border-radius: 8px; /* 增加圆角大小 */
             transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #f8f9fa; /* 添加浅浅的背景色 */
         }
-        .low-stock-item:hover {
-            background-color: #fff3cd;
-            transform: translateX(3px);
-        }
+
         .low-stock-badge {
             font-size: 0.75rem;
             padding: 3px 8px;
             border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .low-stock-item:hover {
+            transform: translateX(3px);
+            background-color: #f1f3f5; /* hover时略微加深背景色 */
         }
         .form-control {
             border-radius: 6px;
@@ -166,7 +172,7 @@
         }
         .badge {
             border-radius: 12px;
-            padding: 3px 8px;
+            padding: 7px 8px;
             font-weight: 500;
         }
         .badge-success {
@@ -242,27 +248,25 @@
             </div>
 
             <div class="row">
-                <!-- 左侧低库存零件显示区域 -->
+                <!-- 左侧库存预警显示区域 -->
                 <div class="col-md-3">
                     <div class="card low-stock-card">
                         <div class="card-header">
-                            <i class="bi bi-exclamation-triangle me-1"></i>数量不足的零件
+                            <i class="bi bi-exclamation-triangle me-1"></i>库存预警
                         </div>
                         <div class="card-body">
                             <div id="lowStockItems">
-                                <!-- 低库存零件将在这里显示 -->
-                                <div th:if="${lowStockItems != null and !lowStockItems.empty}">
+                                <!-- 库存预警将在这里显示 -->
+                                <div th:if="${not #lists.isEmpty(lowStockItems)}">
                                     <div class="low-stock-item" th:each="item : ${lowStockItems}">
-                                        <div class="d-flex justify-content-between">
-                                            <strong th:text="${item.materialName ?: '未定义'}">零件名称</strong>
-                                            <span class="badge bg-danger low-stock-badge"
-                                                  th:text="'库存: ' + ${item.currentStock ?: 0}">库存: 0</span>
-                                        </div>
-                                        <div class="text-muted small" th:text="${item.specification ?: '无规格信息'}">规格</div>
+                                        <strong th:text="${item.material != null ? item.material.materialName : '未定义'}">零件名称</strong>
+                                        <span class="badge"
+                                              th:classappend="${item.alertType == 'LOW_STOCK'} ? 'bg-danger' : 'bg-warning'"
+                                              th:text="${item.alertType == 'LOW_STOCK'} ? '库存不足' : '库存过多'">库存不足</span>
                                     </div>
                                 </div>
-                                <div th:if="${lowStockItems == null or lowStockItems.empty}">
-                                    <div class="alert alert-info">暂无低库存预警信息</div>
+                                <div th:if="${#lists.isEmpty(lowStockItems)}">
+                                    <div class="alert alert-info">暂无库存预警信息</div>
                                 </div>
                             </div>
                         </div>
@@ -297,9 +301,8 @@
                                         <th>零件名称</th>
                                         <th>规格型号</th>
                                         <th>单位</th>
-                                        <th>物料属性</th>
-                                        <th>辅助属性</th>
-                                        <th>默认仓库</th>
+                                        <th>物料代码</th>
+                                        <th>物料产商</th>
                                         <th>状态</th>
                                         <th>操作</th>
                                     </tr>
@@ -310,15 +313,13 @@
                                         <td th:text="${material.materialName}"></td>
                                         <td th:text="${material.specification ?: '-'}"></td>
                                         <td th:text="${material.unit}"></td>
-                                        <td th:text="${material.materialProperty ?: '-'}"></td>
-                                        <td th:text="${material.auxiliaryProperty ?: '-'}"></td>
-                                        <td th:text="${material.warehouse ?: '-'}"></td>
+                                        <td th:text="${material.barcode ?: '-'}"></td>
+                                        <td th:text="${material.supplier ?: '-'}"></td>
                                         <td>
                                             <span class="badge bg-success" th:if="${material.status == null or material.status == '启用'}">启用</span>
                                             <span class="badge bg-secondary" th:unless="${material.status == null or material.status == '启用'}"
                                                   th:text="${material.status ?: '未知'}"></span>
                                         </td>
-                                        <!-- 添加链接到零件详细信息页面 -->
                                         <td>
                                             <a th:href="@{/material/{id}(id=${material.id})}" class="btn btn-sm btn-primary action-btn">查看详情</a>
                                         </td>
@@ -357,7 +358,7 @@
                                 <div class="text-center text-muted page-info">
                                     显示第 <span th:text="${materialsPage.number * materialsPage.size + 1}"></span> -
                                     <span th:text="${materialsPage.number * materialsPage.size + materialsPage.numberOfElements}"></span> 条，
-                                    共 <span th:text="${materialsPage.totalElements}"></span> 条记录
+                                    共 <span th:text="${materialsPage.getTotalElements()}"></span> 条记录
                                 </div>
                             </nav>
                         </div>
@@ -384,44 +385,41 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // 页面加载完成后获取低库存零件信息
+    // 页面加载完成后获取库存预警信息
     document.addEventListener('DOMContentLoaded', function() {
-        fetchLowStockItems();
+        fetchInventoryAlerts();
     });
 
-    // 获取低库存零件信息
-    function fetchLowStockItems() {
-        fetch('/api/low-stock-items')
+    // 获取库存预警信息
+    function fetchInventoryAlerts() {
+        fetch('/api/inventory-alerts')
             .then(response => response.json())
             .then(data => {
                 const container = document.getElementById('lowStockItems');
-                if (data.length === 0) {
-                    container.innerHTML = '<div class="alert alert-info">暂无低库存预警信息</div>';
+                if (data.content.length === 0) {
+                    container.innerHTML = '<div class="alert alert-info">暂无库存预警信息</div>';
                     return;
                 }
 
                 let html = '';
-                data.slice(0, 5).forEach(item => {
+                data.content.slice(0, 14).forEach(item => {
+                    // 根据alertType设置不同的样式
+                    const alertClass = item.alertType === 'LOW_STOCK' ? 'bg-danger' : 'bg-warning';
+                    const alertText = item.alertType === 'LOW_STOCK' ? '库存不足' : '库存过多';
+
                     html += `
                             <div class="low-stock-item">
-                                <div class="d-flex justify-content-between">
-                                    <strong>${item.materialName || item.material_name || '未定义'}</strong>
-                                    <span class="badge bg-danger low-stock-badge">库存: ${item.currentStock !== undefined ? item.currentStock : item.current_stock || 0}</span>
-                                </div>
-                                <div class="text-muted small">${item.specification || '无规格信息'}</div>
+                                <strong>${item.material ? item.material.materialName : '未定义'}</strong>
+                                <span class="badge ${alertClass}">${alertText}</span>
                             </div>
                         `;
                 });
 
-                if (data.length > 5) {
-                    html += `<div class="text-center mt-2"><a href="/warehouse" class="btn btn-sm btn-outline-primary">查看更多</a></div>`;
-                }
-
                 container.innerHTML = html;
             })
             .catch(error => {
-                console.error('获取低库存零件信息失败:', error);
-                document.getElementById('lowStockItems').innerHTML = '<div class="alert alert-warning">获取低库存信息失败</div>';
+                console.error('获取库存预警信息失败:', error);
+                document.getElementById('lowStockItems').innerHTML = '<div class="alert alert-warning">获取库存预警信息失败</div>';
             });
     }
 </script>
