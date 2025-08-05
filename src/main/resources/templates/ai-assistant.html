@@ -10,7 +10,6 @@
         body {
             min-height: 100vh;
             background-color: #f8f9fa;
-            display: flex;
         }
 
         /* 设置按钮样式 */
@@ -35,15 +34,12 @@
             font-weight: bold;
         }
 
-        /* 左侧导航栏样式 */
+        /* 左侧导航栏样式 - 与主面板完全一致 */
         .sidebar {
             background-color: #343a40;
             color: white;
-            width: 250px;
             height: 100vh;
             position: fixed;
-            left: 0;
-            top: 0;
             overflow-y: auto;
         }
 
@@ -62,9 +58,8 @@
             color: white;
         }
 
-        /* 主要内容区域 */
+        /* 主要内容区域 - 与主面板保持一致的样式 */
         .main-content {
-            flex: 1;
             margin-left: 250px;
             padding: 20px;
             display: flex;
@@ -317,11 +312,7 @@
             transition: max-height 0.5s ease-out;
         }
 
-        /* 
-         * 控制展开状态下深度思考内容的最大高度
-         * 当.deep-thought元素具有.open类时，将深度思考内容区域的最大高度设置为500px
-         * 与默认状态下max-height为0的样式形成对比，实现展开/收起动画效果
-         */
+        /* 控制展开状态下深度思考内容的最大高度 */
         .deep-thought.open .deep-thought-content {
             max-height: 500px;
         }
@@ -362,66 +353,70 @@
     </style>
 </head>
 <body>
-<!-- 左侧导航菜单 -->
-<nav class="sidebar">
-    <div class="position-sticky pt-3">
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link" href="/">
-                    <i class="bi bi-speedometer2 me-2"></i>
-                    主面板
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/parts-query">
-                    <i class="bi bi-search me-2"></i>
-                    零件信息查询
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/warehouse">
-                    <i class="bi bi-house-door me-2"></i>
-                    仓库管理
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/inventory">
-                    <i class="bi bi-arrow-left-right me-2"></i>
-                    出入库管理
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" href="/ai-assistant">
-                    <i class="bi bi-robot me-2"></i>
-                    AI助手
-                </a>
-            </li>
-        </ul>
-    </div>
-</nav>
-
-<div class="main-content">
-    <!-- 设置按钮 -->
-    <button class="btn btn-sm btn-secondary settings-btn" data-bs-toggle="modal" data-bs-target="#settingsModal">
-        <i class="bi bi-gear-fill"></i> 设置
-    </button>
-
-    <div class="chat-container">
-        <div class="chat-messages" id="chatMessages">
-            <div class="welcome-container" id="welcomeMessage">
-                <h3 class="welcome-title">欢迎使用仓库管理系统AI助手</h3>
-                <p class="welcome-subtitle">您可以直接输入问题，AI将为您解答库存管理相关问题。</p>
+<div class="container-fluid">
+    <div class="row">
+        <!-- 左侧导航菜单 - 与主面板完全一致 -->
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="bi bi-speedometer2 me-2"></i> 主面板
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/parts-query">
+                            <i class="bi bi-search me-2"></i> 物料信息查询
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/warehouse">
+                            <i class="bi bi-house-door me-2"></i> 仓库管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/inventory">
+                            <i class="bi bi-arrow-left-right me-2"></i> 出入库管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/ai-assistant">
+                            <i class="bi bi-robot me-2"></i> AI助手
+                        </a>
+                    </li>
+                </ul>
             </div>
-        </div>
+        </nav>
 
-        <div class="chat-input">
-            <div class="d-flex w-100">
-                <textarea id="userInput" class="form-control" placeholder="输入您的问题..."></textarea>
-                <button id="sendBtn" class="btn btn-primary btn-send ms-2">
-                    <i class="bi bi-paper-plane"></i> 发送
+        <!-- 主内容区 - 使用与主面板一致的网格结构 -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">AI助手</h1>
+
+                <!-- 设置按钮 -->
+                <button class="btn btn-sm btn-secondary settings-btn" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                    <i class="bi bi-gear-fill"></i> 设置
                 </button>
             </div>
-        </div>
+
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="welcome-container" id="welcomeMessage">
+                        <h3 class="welcome-title">欢迎使用仓库管理系统AI助手</h3>
+                        <p class="welcome-subtitle">您可以直接输入问题，AI将为您解答库存管理相关问题。</p>
+                    </div>
+                </div>
+
+                <div class="chat-input">
+                    <div class="d-flex w-100">
+                        <textarea id="userInput" class="form-control" placeholder="输入您的问题..."></textarea>
+                        <button id="sendBtn" class="btn btn-primary btn-send ms-2">
+                            <i class="bi bi-paper-plane"></i> 发送
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 </div>
 
@@ -540,7 +535,7 @@
             }
 
             // 检查是否有思考标签
-            if (aiResponse.includes('<think>') && aiResponse.includes('</think>')) {
+            if (aiResponse.includes('<think>') && aiResponse.includes('<think>')) {
                 const thinkStart = aiResponse.indexOf('<think>');
                 const thinkEnd = aiResponse.indexOf('</think>') + 8;
                 const thinkContent = aiResponse.substring(thinkStart + 7, thinkEnd - 8)
