@@ -350,6 +350,28 @@
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1); }
         }
+        
+        /* SQL结果表格样式 */
+        .sql-result-table {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+        }
+        
+        .sql-result-table th, .sql-result-table td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .sql-result-table th {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+        
+        .sql-result-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
     </style>
 </head>
 <body>
@@ -404,6 +426,7 @@
                     <div class="welcome-container" id="welcomeMessage">
                         <h3 class="welcome-title">欢迎使用仓库管理系统AI助手</h3>
                         <p class="welcome-subtitle">您可以直接输入问题，AI将为您解答库存管理相关问题。</p>
+                        <p class="welcome-subtitle">您也可以输入数据库操作指令，如"查询所有物料信息"，AI将自动生成并执行SQL语句。</p>
                     </div>
                 </div>
 
@@ -501,6 +524,7 @@
                         <span></span>
                         <span></span>
                         <span></span>
+                        <span></span>
                     </div>
                 </div>
             `;
@@ -510,8 +534,8 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
             // 调用后端API获取AI响应
-            const response = await axios.post('/ai/chat', {
-                message: message
+            const response = await axios.post('/ai/nl-to-sql-and-execute', {
+                naturalLanguageQuery: message
             });
 
             // 移除思考指示器
@@ -521,48 +545,68 @@
             const aiMessageElement = document.createElement('div');
             aiMessageElement.className = 'message ai-message';
 
-            // 处理AI响应，分离思考部分和回答部分
-            const aiResponse = response.data.response || '抱歉，我没有理解您的问题。';
-
-            // 处理HTML内容（如列表、链接等）
-            let formattedResponse = aiResponse
-                .replace(/\n\n/g, '</p><p>')
-                .replace(/\n/g, '<br>')
-                .replace(/<p><\/p>/g, '');
-
-            if (!formattedResponse.startsWith('<p>')) {
-                formattedResponse = `<p>${formattedResponse}</p>`;
-            }
-
-            // 检查是否有思考标签
-            if (aiResponse.includes('<think>') && aiResponse.includes('<think>')) {
-                const thinkStart = aiResponse.indexOf('<think>');
-                const thinkEnd = aiResponse.indexOf('</think>') + 8;
-                const thinkContent = aiResponse.substring(thinkStart + 7, thinkEnd - 8)
-                    .replace(/\n/g, '<br>');
-                const responseContent = aiResponse.substring(thinkEnd).trim();
-
+            if (response.data.success) {
+                // 显示成功结果
+                let content = '';
+                
+                // 如果有生成的SQL，显示它
+                if (response.data.generatedSql) {
+                    content += `<div><strong>生成的SQL:</strong><pre>${response.data.generatedSql}</pre></div>`;
+                }
+                
+                // 显示执行结果
+                if (response.data.rows) {
+                    // 查询结果
+                    content += `<div><strong>查询结果:</strong>`;
+                    if (response.data.rows.length > 0) {
+                        content += '<table class="sql-result-table">';
+                        // 表头
+                        content += '<thead><tr>';
+                        response.data.columns.forEach(col => {
+                            content += `<th>${col}</th>`;
+                        });
+                        content += '</tr></thead>';
+                        
+                        // 表体
+                        content += '<tbody>';
+                        response.data.rows.forEach(row => {
+                            content += '<tr>';
+                            response.data.columns.forEach(col => {
+                                content += `<td>${row[col] !== null ? row[col] : 'NULL'}</td>`;
+                            });
+                            content += '</tr>';
+                        });
+                        content += '</tbody>';
+                        content += '</table>';
+                    } else {
+                        content += '<p>查询结果为空</p>';
+                    }
+                    content += `</div>`;
+                } else {
+                    // 更新操作结果
+                    content += `<div><strong>执行结果:</strong><p>${response.data.message}</p></div>`;
+                }
+                
                 aiMessageElement.innerHTML = `
                     <div class="ai-avatar">
                         <i class="bi bi-robot"></i>
                     </div>
                     <div class="ai-content">
                         <div class="ai-message-header">仓库管理AI助手</div>
-                        <div class="deep-thought">
-                            <div class="deep-thought-header"><strong>深度思考过程</strong><button class="deep-thought-toggle" onclick="toggleDeepThought(this)">展开</button></div>
-                            <div class="deep-thought-content">${thinkContent}</div>
-                        </div>
-                        <div>${responseContent}</div>
+                        <div class="ai-response">${content}</div>
                     </div>
                 `;
             } else {
+                // 显示错误信息
                 aiMessageElement.innerHTML = `
                     <div class="ai-avatar">
-                        <i class="bi bi-robot"></i>
+                        <i class="bi bi-exclamation-triangle"></i>
                     </div>
                     <div class="ai-content">
-                        <div class="ai-message-header">仓库管理AI助手</div>
-                        <div class="ai-response">${formattedResponse}</div>
+                        <div class="ai-message-header">系统提示</div>
+                        <div class="ai-response">
+                            <p>执行失败: ${response.data.message}</p>
+                        </div>
                     </div>
                 `;
             }
