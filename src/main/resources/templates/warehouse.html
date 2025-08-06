@@ -217,10 +217,10 @@
                             <td th:text="${item.warehouse ?: '-'}">零件类型</td>
                             <td th:text="${item.currentStock ?: '-'}">库存数量</td> <!-- 修改列内容：当前库存 -> 库存数量 -->
                             <td>
-                                <span th:if="${item.currentStock == 0}" class="warehouse-status danger">库存为空</span>
-                                <span th:if="${item.currentStock > 0 and item.currentStock <= 5}" class="warehouse-status danger">严重不足</span>
-                                <span th:if="${item.currentStock > 5 and item.currentStock <= item.minStock}" class="warehouse-status warning">库存不足</span>
-                                <span th:if="${item.currentStock > item.minStock}" class="warehouse-status normal">库存正常</span>
+                                <span th:if="${item.currentStock == null or item.currentStock <= 0}" class="warehouse-status danger">库存为空</span>
+                                <span th:if="${item.currentStock != null and item.currentStock > 0 and item.currentStock <= 5}" class="warehouse-status danger">严重不足</span>
+                                <span th:if="${item.currentStock != null and item.currentStock > 5 and item.minStock != null and item.currentStock <= item.minStock}" class="warehouse-status warning">库存不足</span>
+                                <span th:if="${item.currentStock != null and item.minStock != null and item.currentStock > item.minStock}" class="warehouse-status normal">库存正常</span>
                             </td> <!-- 库存状态判断 -->
                             <td>
                                 <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bomItemDetailModal"
@@ -231,7 +231,7 @@
                         data-warehouse=${item.warehouse ?: '--'},
                         data-stock=${item.currentStock ?: '--'},
                         data-minstock=${item.minStock ?: '--'},
-                        data-status=${item.currentStock != null ? (item.currentStock == 0 ? '库存为空' : (item.currentStock > 0 && item.currentStock <= 5 ? '严重不足' : (item.currentStock > 5 && item.currentStock <= item.minStock ? '库存不足' : '库存正常'))) : '--'}">
+                        data-status=${item.currentStock != null ? (item.currentStock <= 0 ? '库存为空' : (item.currentStock > 0 && item.currentStock <= 5 ? '严重不足' : (item.minStock != null && item.currentStock <= item.minStock ? '库存不足' : '库存正常'))) : '--'}">
                                     <i class="bi bi-eye"></i> 查看详情
                                 </a>
                             </td>
@@ -303,12 +303,12 @@
     </div>
 </div>
 
-<!-- BomItem详情模态框 -->
+<!-- 物料详情模态框 -->
 <div class="modal fade" id="bomItemDetailModal" tabindex="-1" aria-labelledby="bomItemDetailModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="bomItemDetailModalLabel">BOM清单详情</h5>
+                <h5 class="modal-title" id="bomItemDetailModalLabel">物料详情</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -316,10 +316,6 @@
                     <div class="col-md-6">
                         <table class="table table-borderless">
                             <tbody>
-                                <tr>
-                                    <th>序号:</th>
-                                    <td id="detailSeqNo">--</td>
-                                </tr>
                                 <tr>
                                     <th>物料编码:</th>
                                     <td id="detailMaterialCode">--</td>
@@ -337,10 +333,6 @@
                                     <td id="detailMaterialProperty">--</td>
                                 </tr>
                                 <tr>
-                                    <th>辅助属性:</th>
-                                    <td id="detailAuxiliaryProperty">--</td>
-                                </tr>
-                                <tr>
                                     <th>单位:</th>
                                     <td id="detailUnit">--</td>
                                 </tr>
@@ -351,24 +343,20 @@
                         <table class="table table-borderless">
                             <tbody>
                                 <tr>
-                                    <th>数量:</th>
-                                    <td id="detailQuantity">--</td>
-                                </tr>
-                                <tr>
-                                    <th>损耗率:</th>
-                                    <td id="detailLossRate">--</td>
-                                </tr>
-                                <tr>
-                                    <th>状态:</th>
-                                    <td id="detailStatus">--</td>
-                                </tr>
-                                <tr>
                                     <th>仓库:</th>
                                     <td id="detailWarehouse">--</td>
                                 </tr>
                                 <tr>
-                                    <th>备注:</th>
-                                    <td id="detailRemark">--</td>
+                                    <th>当前库存:</th>
+                                    <td id="detailQuantity">--</td>
+                                </tr>
+                                <tr>
+                                    <th>最低库存:</th>
+                                    <td id="detailMinStock">--</td>
+                                </tr>
+                                <tr>
+                                    <th>状态:</th>
+                                    <td id="detailStatus">--</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -477,16 +465,14 @@
                 e.preventDefault();
                 
                 // 从data属性获取数据
-                document.getElementById('detailSeqNo').textContent = this.getAttribute('data-seq') || '--';
                 document.getElementById('detailMaterialCode').textContent = this.getAttribute('data-code') || '--';
                 document.getElementById('detailMaterialName').textContent = this.getAttribute('data-name') || '--';
                 document.getElementById('detailMaterialProperty').textContent = this.getAttribute('data-property') || '--';
                 document.getElementById('detailSpecification').textContent = this.getAttribute('data-spec') || '--';
                 document.getElementById('detailWarehouse').textContent = this.getAttribute('data-warehouse') || '--';
                 document.getElementById('detailQuantity').textContent = this.getAttribute('data-stock') || '--';
-                document.getElementById('detailLossRate').textContent = '--'; // Material实体没有lossRate属性
+                document.getElementById('detailMinStock').textContent = this.getAttribute('data-minstock') || '--';
                 document.getElementById('detailStatus').textContent = this.getAttribute('data-status') || '--';
-                document.getElementById('detailRemark').textContent = this.getAttribute('data-remark') || '--';
             });
         });
     });

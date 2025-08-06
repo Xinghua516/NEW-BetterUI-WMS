@@ -17,7 +17,7 @@ public class MaterialCategory {
     private String categoryCode;
     
     @Column(name = "category_name")
-    private String categoryName;
+    private String categoryName; // 分类名称
     
     @Column(name = "description")
     private String description;
@@ -56,7 +56,7 @@ public class MaterialCategory {
     public String getCategoryName() {
         return categoryName;
     }
-    
+
     public void setCategoryName(String categoryName) {
         this.categoryName = categoryName;
     }
