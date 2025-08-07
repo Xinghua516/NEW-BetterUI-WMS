@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工业零件出入库管理系统 - 新建出入库单</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        /* 页面整体样式 */
+        body {
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar {
+            background-color: #343a40;
+            color: white;
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+        }
+
+        /* 侧边栏链接样式 */
+        .sidebar a {
+            color: #ddd;
+            text-decoration: none;
+        }
+
+        /* 侧边栏链接悬停和焦点样式 */
+        .sidebar a:hover,
+        .sidebar a:focus {
+            color: white;
+            background-color: #495057;
+        }
+
+        /* 侧边栏活动链接样式 */
+        .sidebar .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+
+        /* 主内容区样式 */
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+
+        /* 卡片样式 */
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            margin-bottom: 15px;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .sidebar {
+                position: relative;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 侧边栏导航 -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">
+                                <i class="bi bi-speedometer2 me-2"></i>
+                                主面板
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/parts-query">
+                                <i class="bi bi-search me-2"></i>
+                                零件信息查询
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/warehouse">
+                                <i class="bi bi-house-door me-2"></i>
+                                仓库管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/inventory">
+                                <i class="bi bi-arrow-left-right me-2"></i>
+                                出入库管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/new-inventory">
+                                <i class="bi bi-plus-square me-2"></i>
+                                新建出入库单
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/ai-assistant">
+                                <i class="bi bi-robot me-2"></i>
+                                AI助手
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- 主内容区 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">新建出入库单</h1>
+                </div>
+
+                <!-- 新建出入库单表单 -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">新建出入库单</h5>
+                        <form th:action="@{/inventory/save}" method="post">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="transactionType" class="form-label">交易类型 *</label>
+                                        <select class="form-select" id="transactionType" name="transactionType" required>
+                                            <option value="">请选择交易类型</option>
+                                            <option value="IN">入库</option>
+                                            <option value="OUT">出库</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="transactionDate" class="form-label">交易日期 *</label>
+                                        <input type="datetime-local" class="form-control" id="transactionDate" name="transactionDate" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="materialCode" class="form-label">零件编号 *</label>
+                                        <input type="text" class="form-control" id="materialCode" name="materialCode" placeholder="请输入零件编号" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="materialName" class="form-label">零件名称</label>
+                                        <input type="text" class="form-control" id="materialName" name="materialName" placeholder="请输入零件名称">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="specification" class="form-label">规格型号</label>
+                                        <input type="text" class="form-control" id="specification" name="specification" placeholder="请输入规格型号">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="unit" class="form-label">单位</label>
+                                        <select class="form-select" id="unit" name="unit">
+                                            <option value="">请选择单位</option>
+                                            <option value="件">件</option>
+                                            <option value="个">个</option>
+                                            <option value="套">套</option>
+                                            <option value="米">米</option>
+                                            <option value="千克">千克</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="quantity" class="form-label">数量 *</label>
+                                        <input type="number" class="form-control" id="quantity" name="quantity" placeholder="请输入数量" min="1" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="warehouse" class="form-label">仓库 *</label>
+                                        <select class="form-select" id="warehouse" name="warehouse" required>
+                                            <option value="">请选择仓库</option>
+                                            <option value="原材料仓">原材料仓</option>
+                                            <option value="半成品仓">半成品仓</option>
+                                            <option value="成品仓">成品仓</option>
+                                            <option value="备品备件仓">备品备件仓</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="supplier" class="form-label">供应商/客户</label>
+                                        <input type="text" class="form-control" id="supplier" name="supplier" placeholder="请输入供应商或客户名称">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="batchNumber" class="form-label">批次号</label>
+                                        <input type="text" class="form-control" id="batchNumber" name="batchNumber" placeholder="请输入批次号">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="remark" class="form-label">备注</label>
+                                <textarea class="form-control" id="remark" name="remark" rows="3" placeholder="请输入备注信息"></textarea>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-secondary" onclick="window.history.back();">
+                                    <i class="bi bi-arrow-left me-1"></i>返回
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save me-1"></i>保存
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- 自定义JavaScript -->
+    <script>
+        // 设置当前时间作为默认交易日期
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            document.getElementById('transactionDate').value = formattedDateTime;
+        });
+    </script>
+</body>
+</html>

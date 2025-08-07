@@ -46,10 +46,18 @@ public class Warehouse {
     @Column(name = "description")
     private String description;
 
+    // 创建人
+    @Column(name = "created_by")
+    private String createdBy;
+
     // 创建时间
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    // 更新人
+    @Column(name = "updated_by")
+    private String updatedBy;
 
     // 更新时间
     @UpdateTimestamp
@@ -124,12 +132,28 @@ public class Warehouse {
         this.description = description;
     }
 
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
     }
 
     public LocalDateTime getUpdatedAt() {

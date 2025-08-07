@@ -1,6 +1,7 @@
 package com.example.demo.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "inventory_transaction_types")
@@ -17,6 +18,12 @@ public class InventoryTransactionType {
     
     @Column(name = "direction")
     private String direction;
+    
+    @Column(name = "description")
+    private String description;
+    
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
     
     // Constructors
     public InventoryTransactionType() {}
@@ -52,5 +59,21 @@ public class InventoryTransactionType {
     
     public void setDirection(String direction) {
         this.direction = direction;
+    }
+    
+    public String getDescription() {
+        return description;
+    }
+    
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+    
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * 物料主数据实体类（对应数据库表 materials）
@@ -28,67 +27,87 @@ public class Material {
     @Column(name = "material_name", nullable = false, length = 200, columnDefinition = "VARCHAR(200)")
     private String materialName;
 
+    // 物料分类ID
+    @Column(name = "category_id", nullable = true, columnDefinition = "BIGINT")
+    private Long categoryId;
+
     // 规格型号（可为空）
     @Column(name = "specification", nullable = true, length = 200, columnDefinition = "VARCHAR(200)")
     private String specification;
-
-    // 物料属性（如材质、类型）
-    @Column(name = "material_property", nullable = true, length = 50, columnDefinition = "VARCHAR(50)")
-    private String materialProperty;
-
-    // 辅助属性（扩展描述）
-    @Column(name = "auxiliary_property", nullable = true, length = 50, columnDefinition = "VARCHAR(50)")
-    private String auxiliaryProperty;
 
     // 单位（如件、个）
     @Column(name = "unit", nullable = false, length = 20, columnDefinition = "VARCHAR(20)")
     private String unit;
 
-    // 使用状态（启用/停用）
-    @Column(name = "status", nullable = true, length = 20, columnDefinition = "VARCHAR(20)")
-    private String status;
-
-    // 默认仓库位置
-    @Column(name = "warehouse", nullable = true, length = 50, columnDefinition = "VARCHAR(50)")
-    private String warehouse;
-
-    // 当前库存数量
-    @Column(name = "current_stock", nullable = true, columnDefinition = "INT")
-    private Integer currentStock;
-
-    // 分类ID（外键关联分类表）
-    @Column(name = "category_id", nullable = true, columnDefinition = "BIGINT")
-    private Long categoryId;
-
-    // 最低库存阈值（低于此值触发预警）
-    @Column(name = "min_stock", nullable = true, columnDefinition = "INT")
-    private Integer minStock;
-    
-    // 默认仓库ID（外键关联仓库表）
-    @Column(name = "default_warehouse_id", nullable = true, columnDefinition = "BIGINT")
-    private Long defaultWarehouseId;
-
     // 条形码
     @Column(name = "barcode", nullable = true, length = 100, columnDefinition = "VARCHAR(100)")
     private String barcode;
 
+    // 品牌
+    @Column(name = "brand", nullable = true, length = 100, columnDefinition = "VARCHAR(100)")
+    private String brand;
+
     // 供应商
     @Column(name = "supplier", nullable = true, length = 100, columnDefinition = "VARCHAR(100)")
     private String supplier;
+
+    // 使用状态（启用/停用）
+    @Column(name = "status", nullable = true, length = 20, columnDefinition = "VARCHAR(20)")
+    private String status;
+
+    // 默认仓库ID
+    @Column(name = "default_warehouse_id", nullable = true, columnDefinition = "BIGINT")
+    private Long defaultWarehouseId;
+
+    // 物料描述
+    @Column(name = "description", nullable = true, columnDefinition = "TEXT")
+    private String description;
+
+    // 创建人
+    @Column(name = "created_by", nullable = true, length = 50, columnDefinition = "VARCHAR(50)")
+    private String createdBy;
 
     // 创建时间（自动生成）
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    // 更新人
+    @Column(name = "updated_by", nullable = true, length = 50, columnDefinition = "VARCHAR(50)")
+    private String updatedBy;
+
     // 更新时间（自动生成）
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    // 当前库存数量
+    @Column(name = "current_stock", nullable = true, columnDefinition = "INT")
+    private Integer currentStock;
+    
+    // 最低库存阈值（低于此值触发预警）
+    @Column(name = "min_stock", nullable = true, columnDefinition = "INT")
+    private Integer minStock;
+    
+    // 默认仓库位置
+    @Column(name = "warehouse", nullable = true, length = 50, columnDefinition = "VARCHAR(50)")
+    private String warehouse;
+    
+    // 物料属性（如材质、类型）
+    @Column(name = "material_property", nullable = true, length = 50, columnDefinition = "VARCHAR(50)")
+    private String materialProperty;
+    
+    // 辅助属性（扩展描述）
+    @Column(name = "auxiliary_property", nullable = true, length = 50, columnDefinition = "VARCHAR(50)")
+    private String auxiliaryProperty;
 
     // 无参构造函数（JPA要求）
     public Material() {}
-
+    
+    // 有参构造函数
+    public Material(String materialCode) {
+        this.materialCode = materialCode;
+    }
 
     // Getter/Setter（完整生成）
 
@@ -116,28 +135,20 @@ public class Material {
         this.materialName = materialName;
     }
 
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
+
     public String getSpecification() {
         return specification;
     }
 
     public void setSpecification(String specification) {
         this.specification = specification;
-    }
-
-    public String getMaterialProperty() {
-        return materialProperty;
-    }
-
-    public void setMaterialProperty(String materialProperty) {
-        this.materialProperty = materialProperty;
-    }
-
-    public String getAuxiliaryProperty() {
-        return auxiliaryProperty;
-    }
-
-    public void setAuxiliaryProperty(String auxiliaryProperty) {
-        this.auxiliaryProperty = auxiliaryProperty;
     }
 
     public String getUnit() {
@@ -148,6 +159,30 @@ public class Material {
         this.unit = unit;
     }
 
+    public String getBarcode() {
+        return barcode;
+    }
+
+    public void setBarcode(String barcode) {
+        this.barcode = barcode;
+    }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public String getSupplier() {
+        return supplier;
+    }
+
+    public void setSupplier(String supplier) {
+        this.supplier = supplier;
+    }
+
     public String getStatus() {
         return status;
     }
@@ -156,14 +191,54 @@ public class Material {
         this.status = status;
     }
 
-    public String getWarehouse() {
-        return warehouse;
+    public Long getDefaultWarehouseId() {
+        return defaultWarehouseId;
     }
 
-    public void setWarehouse(String warehouse) {
-        this.warehouse = warehouse;
+    public void setDefaultWarehouseId(Long defaultWarehouseId) {
+        this.defaultWarehouseId = defaultWarehouseId;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+    
     public Integer getCurrentStock() {
         return currentStock;
     }
@@ -180,51 +255,27 @@ public class Material {
         this.minStock = minStock;
     }
 
-    public Long getCategoryId() {
-        return categoryId;
+    public String getWarehouse() {
+        return warehouse;
     }
 
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
+    public void setWarehouse(String warehouse) {
+        this.warehouse = warehouse;
     }
 
-    public Long getDefaultWarehouseId() {
-        return defaultWarehouseId;
+    public String getMaterialProperty() {
+        return materialProperty;
     }
 
-    public void setDefaultWarehouseId(Long defaultWarehouseId) {
-        this.defaultWarehouseId = defaultWarehouseId;
+    public void setMaterialProperty(String materialProperty) {
+        this.materialProperty = materialProperty;
     }
 
-    public String getBarcode() {
-        return barcode;
+    public String getAuxiliaryProperty() {
+        return auxiliaryProperty;
     }
 
-    public void setBarcode(String barcode) {
-        this.barcode = barcode;
-    }
-
-    public String getSupplier() {
-        return supplier;
-    }
-
-    public void setSupplier(String supplier) {
-        this.supplier = supplier;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setAuxiliaryProperty(String auxiliaryProperty) {
+        this.auxiliaryProperty = auxiliaryProperty;
     }
 }

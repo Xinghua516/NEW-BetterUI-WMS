@@ -1,15 +1,7 @@
 package com.example.demo.controller;
 
-import com.example.demo.entity.BomHeader;
-import com.example.demo.entity.InventoryAlert;
-import com.example.demo.entity.InventoryRecord;
-import com.example.demo.entity.LowStockItem;
-import com.example.demo.entity.Material;
-import com.example.demo.repository.BomHeaderRepository;
-import com.example.demo.repository.InventoryAlertRepository;
-import com.example.demo.repository.InventoryRecordRepository;
-import com.example.demo.repository.LowStockItemRepository;
-import com.example.demo.repository.MaterialRepository;
+import com.example.demo.entity.*;
+import com.example.demo.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,13 +28,13 @@ public class PartsController {
     private MaterialRepository materialRepository;
     
     @Autowired
-    private InventoryRecordRepository inventoryRecordRepository;
-    
-    @Autowired
     private LowStockItemRepository lowStockItemRepository;
     
     @Autowired
     private InventoryAlertRepository inventoryAlertRepository;
+    
+    @Autowired
+    private InventoryTransactionRepository inventoryTransactionRepository;
     
     @GetMapping("/parts")
     public String parts(Model model) {
@@ -114,8 +106,8 @@ public class PartsController {
 
             // 获取该零件的出入库记录
             Pageable pageable = PageRequest.of(0, 10); // 默认分页参数
-            Page<InventoryRecord> inventoryRecords = inventoryRecordRepository.findByItemCode(material.getMaterialCode(), pageable);
-            model.addAttribute("inventoryRecords", inventoryRecords.getContent());
+            Page<InventoryTransaction> inventoryTransactions = inventoryTransactionRepository.findByItemCode(material.getMaterialCode(), pageable);
+            model.addAttribute("inventoryTransactions", inventoryTransactions.getContent());
         } else {
             // 处理零件不存在的情况
             return "redirect:/parts-query"; // 重定向到零件查询页面

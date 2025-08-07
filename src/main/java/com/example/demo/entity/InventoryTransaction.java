@@ -1,6 +1,7 @@
 package com.example.demo.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,8 +17,26 @@ public class InventoryTransaction {
     @Column(name = "quantity")
     private Integer quantity;
     
+    @Column(name = "unit_cost")
+    private BigDecimal unitCost;
+    
+    @Column(name = "total_cost")
+    private BigDecimal totalCost;
+    
+    @Column(name = "reference_no")
+    private String referenceNo;
+    
     @Column(name = "transaction_time")
     private LocalDateTime transactionTime;
+    
+    @Column(name = "notes")
+    private String notes;
+    
+    @Column(name = "created_by")
+    private String createdBy;
+    
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
     
     @ManyToOne
     @JoinColumn(name = "material_id")
@@ -59,12 +78,60 @@ public class InventoryTransaction {
         this.quantity = quantity;
     }
     
+    public BigDecimal getUnitCost() {
+        return unitCost;
+    }
+    
+    public void setUnitCost(BigDecimal unitCost) {
+        this.unitCost = unitCost;
+    }
+    
+    public BigDecimal getTotalCost() {
+        return totalCost;
+    }
+    
+    public void setTotalCost(BigDecimal totalCost) {
+        this.totalCost = totalCost;
+    }
+    
+    public String getReferenceNo() {
+        return referenceNo;
+    }
+    
+    public void setReferenceNo(String referenceNo) {
+        this.referenceNo = referenceNo;
+    }
+    
     public LocalDateTime getTransactionTime() {
         return transactionTime;
     }
     
     public void setTransactionTime(LocalDateTime transactionTime) {
         this.transactionTime = transactionTime;
+    }
+    
+    public String getNotes() {
+        return notes;
+    }
+    
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+    
+    public String getCreatedBy() {
+        return createdBy;
+    }
+    
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+    
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+    
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
     
     public Material getMaterial() {

@@ -7,8 +7,8 @@ import com.example.demo.entity.InventoryTransactionDTO;
 import com.example.demo.entity.Material;
 import com.example.demo.entity.MaterialCategory;
 import com.example.demo.entity.Warehouse;
+
 import com.example.demo.repository.InventoryAlertRepository;
-import com.example.demo.repository.InventoryRecordRepository;
 import com.example.demo.repository.InventoryTransactionRepository;
 import com.example.demo.repository.MaterialRepository;
 import com.example.demo.repository.MaterialCategoryRepository;
@@ -32,10 +32,7 @@ import java.util.stream.Collectors;
 
 @Controller
 public class HomeController {
-    
-    @Autowired
-    private InventoryRecordRepository inventoryRecordRepository;
-    
+
     @Autowired
     private InventoryTransactionRepository inventoryTransactionRepository;
     
@@ -64,11 +61,7 @@ public class HomeController {
             LocalDateTime now = LocalDateTime.now();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             model.addAttribute("currentTime", now.format(formatter));
-            
-            // 从数据库获取仓库统计数据
-            long totalItems = inventoryRecordRepository.count();
-            model.addAttribute("totalItems", totalItems);
-            
+
             // 从数据库获取最近1天出入库记录
             LocalDateTime oneDayAgo = LocalDateTime.now().minusDays(1);
             List<InventoryTransaction> recentTransactions = inventoryTransactionRepository

@@ -8,8 +8,10 @@ import java.util.Optional;
 
 @Repository
 public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
-    
-    Optional<Warehouse> findByWarehouseCode(String warehouseCode);
-    
+    /**
+     * 根据仓库名称查找仓库
+     * @param warehouseName 仓库名称
+     * @return 仓库对象
+     */
     Optional<Warehouse> findByWarehouseName(String warehouseName);
 }
