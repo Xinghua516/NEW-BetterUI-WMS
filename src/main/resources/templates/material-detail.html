@@ -24,21 +24,21 @@
                     
                     <dt class="col-sm-3">单位</dt>
                     <dd class="col-sm-9" th:text="${material.unit}"></dd>
-                    
-                    <dt class="col-sm-3">物料属性</dt>
-                    <dd class="col-sm-9" th:text="${material.materialProperty ?: '-'}"></dd>
-                    
-                    <dt class="col-sm-3">辅助属性</dt>
-                    <dd class="col-sm-9" th:text="${material.auxiliaryProperty ?: '-'}"></dd>
+
+                    <dt class="col-sm-3">物料编码</dt>
+                    <dd class="col-sm-9" th:text="${material.barcode ?: '-'}"></dd>
+
+                    <dt class="col-sm-3">供应商</dt>
+                    <dd class="col-sm-9" th:text="${material.supplier ?: '-'}"></dd>
                     
                     <dt class="col-sm-3">默认仓库</dt>
-                    <dd class="col-sm-9" th:text="${material.warehouse ?: '-'}"></dd>
+                    <dd class="col-sm-9" th:text="${defaultWarehouseName ?: '-'}"></dd>
                     
                     <dt class="col-sm-3">当前库存</dt>
-                    <dd class="col-sm-9" th:text="${material.currentStock ?: '0'}"></dd>
-                    
-                    <dt class="col-sm-3">最低库存</dt>
-                    <dd class="col-sm-9" th:text="${material.minStock ?: '0'}"></dd>
+                    <dd class="col-sm-9" th:text="${currentStock ?: '0'}"></dd>
+
+                    <dt class="col-sm-3">所属分类</dt>
+                    <dd class="col-sm-9" th:text="${categoryName ?: '-'}"></dd>
                     
                     <dt class="col-sm-3">状态</dt>
                     <dd class="col-sm-9">
@@ -63,14 +63,17 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:if="${inventoryRecords.empty}">
+                        <tr th:if="${inventoryTransactions == null or #lists.isEmpty(inventoryTransactions)}">
                             <td colspan="4" class="text-center">暂无出入库记录</td>
                         </tr>
-                        <tr th:each="record : ${inventoryRecords}">
-                            <td th:text="${record.type}"></td>
+                        <tr th:each="record : ${inventoryTransactions}">
+                            <td>
+                                <span th:if="${record.transactionType != null and record.transactionType.direction == 'IN'}" class="badge bg-success">入库</span>
+                                <span th:if="${record.transactionType != null and record.transactionType.direction == 'OUT'}" class="badge bg-danger">出库</span>
+                            </td>
                             <td th:text="${record.quantity}"></td>
-                            <td th:text="${record.operator ?: '-'}"></td>
-                            <td th:text="${record.time}"></td>
+                            <td th:text="${record.createdBy ?: '-'}"></td>
+                            <td th:text="${record.transactionTime != null ? #temporals.format(record.transactionTime, 'yyyy-MM-dd HH:mm:ss') : '-'}"></td>
                         </tr>
                     </tbody>
                 </table>

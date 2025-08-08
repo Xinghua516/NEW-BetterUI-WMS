@@ -49,9 +49,14 @@ public class InventoryController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String materialName, // 新增物料名称参数
+            @RequestParam(required = false) String warehouseName, // 新增仓库名称参数
             Model model) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "transactionTime"));
+        
+        // 获取所有仓库列表用于筛选下拉框
+        List<Warehouse> warehouses = warehouseRepository.findAll();
+        model.addAttribute("warehouses", warehouses);
 
         Specification<InventoryTransaction> spec = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -60,6 +65,9 @@ public class InventoryController {
             }
             if (materialName != null && !materialName.isEmpty()) {
                 predicates.add(criteriaBuilder.like(root.get("material").get("materialName"), "%" + materialName + "%"));
+            }
+            if (warehouseName != null && !warehouseName.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("warehouse").get("warehouseName"), warehouseName));
             }
             return criteriaBuilder.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };
@@ -76,6 +84,7 @@ public class InventoryController {
         model.addAttribute("outRecords", outRecords);
         model.addAttribute("selectedType", type);
         model.addAttribute("materialName", materialName); // 将物料名称传递给视图
+        model.addAttribute("selectedWarehouse", warehouseName); // 将选中的仓库名称传递给视图
 
         return "inventory";
     }

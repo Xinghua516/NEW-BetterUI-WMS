@@ -36,6 +36,15 @@ public class PartsController {
     @Autowired
     private InventoryTransactionRepository inventoryTransactionRepository;
     
+    @Autowired
+    private MaterialCategoryRepository materialCategoryRepository;
+    
+    @Autowired
+    private WarehouseRepository warehouseRepository;
+    
+    @Autowired
+    private InventoryRepository inventoryRepository;
+    
     @GetMapping("/parts")
     public String parts(Model model) {
         // 获取BOM清单头信息
@@ -107,7 +116,40 @@ public class PartsController {
             // 获取该零件的出入库记录
             Pageable pageable = PageRequest.of(0, 10); // 默认分页参数
             Page<InventoryTransaction> inventoryTransactions = inventoryTransactionRepository.findByItemCode(material.getMaterialCode(), pageable);
-            model.addAttribute("inventoryTransactions", inventoryTransactions.getContent());
+            // 确保即使没有记录也传递一个空列表而不是null
+            model.addAttribute("inventoryTransactions", inventoryTransactions != null ? inventoryTransactions.getContent() : new ArrayList<>());
+
+            // 新增：获取所属分类名称
+            if (material.getCategoryId() != null) {
+                Optional<MaterialCategory> categoryOptional = materialCategoryRepository.findById(material.getCategoryId());
+                if (categoryOptional.isPresent()) {
+                    model.addAttribute("categoryName", categoryOptional.get().getCategoryName());
+                } else {
+                    model.addAttribute("categoryName", "-");
+                }
+            } else {
+                model.addAttribute("categoryName", "-");
+            }
+            
+            // 新增：获取默认仓库名称
+            if (material.getDefaultWarehouseId() != null) {
+                Optional<Warehouse> warehouseOptional = warehouseRepository.findById(material.getDefaultWarehouseId());
+                if (warehouseOptional.isPresent()) {
+                    model.addAttribute("defaultWarehouseName", warehouseOptional.get().getWarehouseName());
+                } else {
+                    model.addAttribute("defaultWarehouseName", "-");
+                }
+            } else {
+                model.addAttribute("defaultWarehouseName", "-");
+            }
+            
+            // 新增：获取当前库存数量
+            Optional<Inventory> inventoryOptional = inventoryRepository.findByMaterialId(material.getId());
+            if (inventoryOptional.isPresent()) {
+                model.addAttribute("currentStock", inventoryOptional.get().getQuantity());
+            } else {
+                model.addAttribute("currentStock", 0);
+            }
         } else {
             // 处理零件不存在的情况
             return "redirect:/parts-query"; // 重定向到零件查询页面

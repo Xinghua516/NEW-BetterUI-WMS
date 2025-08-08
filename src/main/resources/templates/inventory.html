@@ -170,7 +170,7 @@
                         <h5 class="card-title">筛选条件</h5>
                         <form th:action="@{/inventory}" method="get">
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <select class="form-select" id="filterType" name="type">
                                             <option value="">全部类型</option>
@@ -179,13 +179,26 @@
                                         </select>
                                     </div>
                                 </div>
-                                <!-- 添加物料名称搜索框 -->
-                                <div class="col-md-4">
+                                <!-- 添加仓库筛选下拉框 -->
+                                <div class="col-md-3">
                                     <div class="form-group">
-                                        <input type="text" class="form-control" id="materialName" name="materialName" placeholder="请输入物料名称">
+                                        <select class="form-select" id="warehouseName" name="warehouseName">
+                                            <option value="">全部仓库</option>
+                                            <option th:each="warehouse : ${warehouses}" 
+                                                    th:value="${warehouse.warehouseName}" 
+                                                    th:text="${warehouse.warehouseName}" 
+                                                    th:selected="${selectedWarehouse == warehouse.warehouseName}">
+                                            </option>
+                                        </select>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <!-- 添加物料名称搜索框 -->
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <input type="text" class="form-control" id="materialName" name="materialName" placeholder="请输入物料名称" th:value="${materialName}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
                                     <button type="submit" class="btn btn-primary">
                                         <i class="bi bi-search me-1"></i>查询
                                     </button>
@@ -265,7 +278,7 @@
                     <ul class="pagination">
                         <!-- 首页 -->
                         <li class="page-item" th:classappend="${inventoryRecords.first} ? 'disabled'">
-                            <a class="page-link" th:href="@{/inventory(page=0, size=${inventoryRecords.size}, type=${selectedType}, materialName=${materialName})}">
+                            <a class="page-link" th:href="@{/inventory(page=0, size=${inventoryRecords.size}, type=${selectedType}, materialName=${materialName}, warehouseName=${selectedWarehouse})}">
                                 首页
                             </a>
                         </li>
@@ -273,7 +286,7 @@
                         <!-- 上一页 -->
                         <li class="page-item" th:classappend="${inventoryRecords.first} ? 'disabled'">
                             <a class="page-link"
-                               th:href="@{/inventory(page=${inventoryRecords.number - 1}, size=${inventoryRecords.size}, type=${selectedType}, materialName=${materialName})}">
+                               th:href="@{/inventory(page=${inventoryRecords.number - 1}, size=${inventoryRecords.size}, type=${selectedType}, materialName=${materialName}, warehouseName=${selectedWarehouse})}">
                                 上一页
                             </a>
                         </li>
@@ -282,7 +295,7 @@
                         <th:block th:with="currentPage=${inventoryRecords.number}, totalPages=${inventoryRecords.totalPages}">
                             <!-- 始终显示第一页 -->
                             <li class="page-item" th:classappend="${currentPage == 0} ? 'active'">
-                                <a class="page-link" th:href="@{/inventory(page=0, size=${inventoryRecords.size}, type=${selectedType}, materialName=${materialName})}">1</a>
+                                <a class="page-link" th:href="@{/inventory(page=0, size=${inventoryRecords.size}, type=${selectedType}, materialName=${materialName}, warehouseName=${selectedWarehouse})}">1</a>
                             </li>
 
                             <!-- 前面的省略号 (如果当前页离第一页较远) -->
@@ -295,7 +308,7 @@
                                       th:if="${i >= currentPage - 2 and i <= currentPage + 2}">
                                 <li class="page-item" th:classappend="${i == currentPage} ? 'active'">
                                     <a class="page-link"
-                                       th:href="@{/inventory(page=${i}, size=${inventoryRecords.size}, type=${selectedType}, materialName=${materialName})}"
+                                       th:href="@{/inventory(page=${i}, size=${inventoryRecords.size}, type=${selectedType}, materialName=${materialName}, warehouseName=${selectedWarehouse})}"
                                        th:text="${i + 1}">1</a>
                                 </li>
                             </th:block>
@@ -309,7 +322,7 @@
                             <th:block th:if="${totalPages > 1}">
                                 <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'active'">
                                     <a class="page-link"
-                                       th:href="@{/inventory(page=${totalPages - 1}, size=${inventoryRecords.size}, type=${selectedType}, materialName=${materialName})}"
+                                       th:href="@{/inventory(page=${totalPages - 1}, size=${inventoryRecords.size}, type=${selectedType}, materialName=${materialName}, warehouseName=${selectedWarehouse})}"
                                        th:text="${totalPages}">1</a>
                                 </li>
                             </th:block>
@@ -318,7 +331,7 @@
                         <!-- 下一页 -->
                         <li class="page-item" th:classappend="${inventoryRecords.last} ? 'disabled'">
                             <a class="page-link"
-                               th:href="@{/inventory(page=${inventoryRecords.number + 1}, size=${inventoryRecords.size}, type=${selectedType}, materialName=${materialName})}">
+                               th:href="@{/inventory(page=${inventoryRecords.number + 1}, size=${inventoryRecords.size}, type=${selectedType}, materialName=${materialName}, warehouseName=${selectedWarehouse})}">
                                 下一页
                             </a>
                         </li>
@@ -326,7 +339,7 @@
                         <!-- 末页 -->
                         <li class="page-item" th:classappend="${inventoryRecords.last} ? 'disabled'">
                             <a class="page-link"
-                               th:href="@{/inventory(page=${inventoryRecords.totalPages - 1}, size=${inventoryRecords.size}, type=${selectedType}, materialName=${materialName})}">
+                               th:href="@{/inventory(page=${inventoryRecords.totalPages - 1}, size=${inventoryRecords.size}, type=${selectedType}, materialName=${materialName}, warehouseName=${selectedWarehouse})}">
                                 末页
                             </a>
                         </li>
