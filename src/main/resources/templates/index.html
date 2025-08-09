@@ -18,24 +18,43 @@
         .sidebar {
             background-color: #343a40;
             color: white;
+            width: 220px;
             height: 100vh;
             position: fixed;
-            overflow-y: auto;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
+
+        .sidebar-inner {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 0;
+        }
+
+        .sidebar-bottom {
+            padding: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
         .sidebar a {
             color: #ddd;
             text-decoration: none;
+            display: block;
+            padding: 0.75rem 1rem;
         }
+
         .sidebar a:hover, .sidebar a:focus {
             color: white;
             background-color: #495057;
         }
+
         .sidebar .nav-link.active {
             background-color: #0d6efd;
             color: white;
         }
         .main-content {
-            margin-left: 250px;
+            margin-left: 220px;
             padding: 20px;
         }
         .card {
@@ -115,7 +134,7 @@
         .weather-icon:hover {
             transform: scale(1.1);
         }
-        
+
         /* 库存预警样式 */
         .low-stock {
             color: #dc3545;
@@ -125,16 +144,16 @@
             color: #fd7e14;
             font-weight: bold;
         }
-        
+
         /* 分页样式 */
         .pagination {
             margin-bottom: 0;
         }
-        
+
         .page-link {
             color: #0d6efd;
         }
-        
+
         .page-item.active .page-link {
             background-color: #0d6efd;
             border-color: #0d6efd;
@@ -145,8 +164,9 @@
 <div class="container-fluid">
     <div class="row">
         <!-- 侧边栏导航 -->
-        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-            <div class="position-sticky pt-3">
+        <nav class="sidebar">
+            <!-- 侧边栏上部内容 -->
+            <div class="sidebar-inner">
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="nav-link active" href="/">
@@ -157,13 +177,13 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/parts-query">
                             <i class="bi bi-search me-2"></i>
-                            零件信息查询
+                            物料信息查询
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/warehouse">
                             <i class="bi bi-house-door me-2"></i>
-                            仓库管理
+                            库存管理
                         </a>
                     </li>
                     <li class="nav-item">
@@ -186,9 +206,27 @@
                     </li>
                 </ul>
             </div>
+
+            <!-- 侧边栏底部固定按钮 -->
+            <div class="sidebar-bottom">
+                <ul class="nav flex-column">
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="/account">
+                            <i class="bi bi-person-circle me-2"></i>
+                            账号管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/settings">
+                            <i class="bi bi-gear me-2"></i>
+                            设置
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </nav>
 
-        <!-- 主内容区 -->
+        <!-- 主内容区（完全未修改） -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">主面板</h1>
@@ -588,14 +626,14 @@
                                 </table>
                             </div>
                             <!-- 分页控件 -->
-                            <div class="d-flex justify-content-center align-items-center p-2 border-top" 
+                            <div class="d-flex justify-content-center align-items-center p-2 border-top"
                                  th:if="${totalPages > 1}">
                                 <nav aria-label="库存预警分页">
                                     <ul class="pagination mb-0">
                                         <!-- 上一页 -->
                                         <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                                            <a class="page-link" 
-                                               th:href="@{/(page=${currentPage - 1}, size=4)}" 
+                                            <a class="page-link"
+                                               th:href="@{/(page=${currentPage - 1}, size=4)}"
                                                th:if="${currentPage > 0}">
                                                 <span aria-hidden="true">&laquo;</span>
                                             </a>
@@ -603,18 +641,18 @@
                                                 <span aria-hidden="true">&laquo;</span>
                                             </span>
                                         </li>
-                                        
+
                                         <!-- 页码 -->
-                                        <li class="page-item" 
-                                            th:each="i : ${#numbers.sequence(0, totalPages - 1)}" 
+                                        <li class="page-item"
+                                            th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
                                             th:classappend="${i == currentPage} ? 'active'">
                                             <a class="page-link" th:href="@{/(page=${i}, size=4)}" th:text="${i + 1}">1</a>
                                         </li>
-                                        
+
                                         <!-- 下一页 -->
                                         <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
-                                            <a class="page-link" 
-                                               th:href="@{/(page=${currentPage + 1}, size=4)}" 
+                                            <a class="page-link"
+                                               th:href="@{/(page=${currentPage + 1}, size=4)}"
                                                th:if="${currentPage + 1 < totalPages}">
                                                 <span aria-hidden="true">&raquo;</span>
                                             </a>
@@ -625,7 +663,7 @@
                                     </ul>
                                 </nav>
                             </div>
-                            
+
                             <!-- 当只有一页或没有数据时显示 -->
                             <div class="text-center p-2 border-top" th:if="${totalPages <= 1}">
                                 <button id="viewMoreParts" class="btn btn-outline-primary btn-sm">查看更多</button>
@@ -638,7 +676,7 @@
     </div>
 </div>
 
-<!-- Bootstrap JS -->
+<!-- Bootstrap JS（完全未修改） -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
