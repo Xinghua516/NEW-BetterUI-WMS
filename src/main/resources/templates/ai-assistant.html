@@ -34,18 +34,34 @@
             font-weight: bold;
         }
 
-        /* 左侧导航栏样式 - 与主面板完全一致 */
+        /* 左侧导航栏样式 - 统一调整为与主面板一致 */
         .sidebar {
             background-color: #343a40;
             color: white;
+            width: 220px;
             height: 100vh;
             position: fixed;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            transition: width 0.3s ease;
+        }
+        .sidebar-inner {
+            flex: 1;
+            padding: 1rem 0;
+        }
+        .sidebar-bottom {
+            padding: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
         }
 
         .sidebar a {
             color: #ddd;
             text-decoration: none;
+            display: block;
+            padding: 0.75rem 1rem;
+            transition: all 0.2s ease;
         }
 
         .sidebar a:hover, .sidebar a:focus {
@@ -58,16 +74,32 @@
             color: white;
         }
 
-        /* 主要内容区域 - 与主面板保持一致的样式 */
+        /* 主要内容区域 - 保持与主面板一致的样式 */
         .main-content {
-            margin-left: 250px;
+            margin-left: 220px;
             padding: 20px;
             display: flex;
             flex-direction: column;
             height: 100vh;
+            transition: all 0.3s ease;
         }
 
-        /* 聊天窗口样式 */
+        /* 响应式调整 - 与主面板统一 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                overflow: hidden;
+            }
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            .sidebar.open {
+                width: 220px;
+            }
+        }
+
+        /* 聊天窗口样式（完全保留） */
         .chat-container {
             flex: 1;
             display: flex;
@@ -78,7 +110,7 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
-        /* 消息显示区域 */
+        /* 消息显示区域（完全保留） */
         .chat-messages {
             flex: 1;
             overflow-y: auto;
@@ -88,7 +120,7 @@
             gap: 15px;
         }
 
-        /* 消息气泡样式基础 */
+        /* 消息气泡样式基础（完全保留） */
         .message {
             max-width: 70%;
             padding: 12px 16px;
@@ -101,7 +133,7 @@
             transition: all 0.3s ease;
         }
 
-        /* 用户消息样式 */
+        /* 用户消息样式（完全保留） */
         .user-message {
             align-self: flex-end;
             background-color: #0d6efd;
@@ -110,7 +142,7 @@
             box-shadow: 0 2px 8px rgba(13, 110, 253, 0.25);
         }
 
-        /* AI消息样式优化 */
+        /* AI消息样式优化（完全保留） */
         .ai-message {
             align-self: flex-start;
             background-color: #ffffff;
@@ -123,7 +155,7 @@
             gap: 12px;
         }
 
-        /* AI头像 */
+        /* AI头像（完全保留） */
         .ai-avatar {
             width: 36px;
             height: 36px;
@@ -138,12 +170,12 @@
             box-shadow: 0 2px 5px rgba(13, 110, 253, 0.2);
         }
 
-        /* AI消息内容容器 */
+        /* AI消息内容容器（完全保留） */
         .ai-content {
             flex: 1;
         }
 
-        /* AI消息标题（可选） */
+        /* AI消息标题（可选）（完全保留） */
         .ai-message-header {
             font-size: 13px;
             color: #666;
@@ -151,12 +183,12 @@
             font-weight: 500;
         }
 
-        /* AI回答内容样式优化 */
+        /* AI回答内容样式优化（完全保留） */
         .ai-response {
             padding: 5px 0;
         }
 
-        /* 格式化内容样式 */
+        /* 格式化内容样式（完全保留） */
         .ai-response p {
             margin-bottom: 10px;
         }
@@ -190,7 +222,7 @@
             border-bottom: 1px solid #0d6efd;
         }
 
-        /* 代码块样式 */
+        /* 代码块样式（完全保留） */
         .ai-response pre {
             background-color: #f8f9fa;
             padding: 12px;
@@ -201,7 +233,7 @@
             margin: 10px 0;
         }
 
-        /* 输入区域样式 */
+        /* 输入区域样式（完全保留） */
         .chat-input {
             border-top: 1px solid #eee;
             padding: 15px;
@@ -268,7 +300,7 @@
             color: #666;
         }
 
-        /* 深度思考内容样式优化 */
+        /* 深度思考内容样式优化（完全保留） */
         .deep-thought {
             background-color: #f8f9fa;
             color: #444;
@@ -312,12 +344,12 @@
             transition: max-height 0.5s ease-out;
         }
 
-        /* 控制展开状态下深度思考内容的最大高度 */
+        /* 控制展开状态下深度思考内容的最大高度（完全保留） */
         .deep-thought.open .deep-thought-content {
             max-height: 500px;
         }
 
-        /* 消息出现动画 */
+        /* 消息出现动画（完全保留） */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -327,7 +359,7 @@
             animation: fadeIn 0.3s ease forwards;
         }
 
-        /* 加载状态样式优化 */
+        /* 加载状态样式优化（完全保留） */
         .typing-indicator {
             display: flex;
             align-items: center;
@@ -350,129 +382,128 @@
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1); }
         }
-        
-        /* SQL结果表格样式 */
+
+        /* SQL结果表格样式（完全保留） */
         .sql-result-table {
             width: 100%;
             margin-top: 10px;
             border-collapse: collapse;
         }
-        
+
         .sql-result-table th, .sql-result-table td {
             border: 1px solid #dee2e6;
             padding: 8px;
             text-align: left;
         }
-        
+
         .sql-result-table th {
             background-color: #e9ecef;
             font-weight: bold;
         }
-        
+
         .sql-result-table tr:nth-child(even) {
             background-color: #f8f9fa;
         }
     </style>
 </head>
 <body>
-<div class="container-fluid">
-    <div class="row">
-        <!-- 侧边栏导航 -->
-        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-            <div class="position-sticky pt-3">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">
-                            <i class="bi bi-speedometer2 me-2"></i>
-                            主面板
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/parts-query">
-                            <i class="bi bi-search me-2"></i>
-                            物料信息查询
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/warehouse">
-                            <i class="bi bi-house-door me-2"></i>
-                            库存管理
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/inventory">
-                            <i class="bi bi-arrow-left-right me-2"></i>
-                            出入库管理
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/new-inventory">
-                            <i class="bi bi-plus-square me-2"></i>
-                            新建出入库单
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/ai-assistant">
-                            <i class="bi bi-robot me-2"></i>
-                            AI助手
-                        </a>
-                    </li>
-                </ul>
-                
-                <!-- 底部按钮 -->
-                <div class="mt-auto py-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item mb-2">
-                            <a class="nav-link" href="/account">
-                                <i class="bi bi-person-circle me-2"></i>
-                                账号管理
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/settings">
-                                <i class="bi bi-gear me-2"></i>
-                                设置
-                            </a>
-                        </li>
-                    </ul>
+<div class="app-container">
+    <!-- 侧边栏导航（仅修改此处，与主面板统一） -->
+    <nav class="sidebar">
+        <!-- 侧边栏上部内容 -->
+        <div class="sidebar-inner">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="bi bi-speedometer2 me-2"></i>
+                        主面板
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/parts-query">
+                        <i class="bi bi-search me-2"></i>
+                        物料信息查询
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/warehouse">
+                        <i class="bi bi-house-door me-2"></i>
+                        库存管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/inventory">
+                        <i class="bi bi-arrow-left-right me-2"></i>
+                        出入库管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/new-inventory">
+                        <i class="bi bi-plus-square me-2"></i>
+                        新建出入库单
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/ai-assistant">
+                        <i class="bi bi-robot me-2"></i>
+                        AI助手
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 侧边栏底部固定按钮 -->
+        <div class="sidebar-bottom">
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="/account">
+                        <i class="bi bi-person-circle me-2"></i>
+                        账号管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/settings">
+                        <i class="bi bi-gear me-2"></i>
+                        设置
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 主内容区（完全保留，未做任何修改） -->
+    <main class="main-content">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">AI助手</h1>
+
+            <!-- 设置按钮 -->
+            <button class="btn btn-sm btn-secondary settings-btn" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                <i class="bi bi-gear-fill"></i> 设置
+            </button>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="welcome-container" id="welcomeMessage">
+                    <h3 class="welcome-title">欢迎使用仓库管理系统AI助手</h3>
+                    <p class="welcome-subtitle">您可以直接输入问题，AI将为您解答库存管理相关问题。</p>
+                    <p class="welcome-subtitle">您也可以输入数据库操作指令，如"查询所有物料信息"，AI将自动生成并执行SQL语句。</p>
                 </div>
             </div>
-        </nav>
 
-        <!-- 主内容区 - 使用与主面板一致的网格结构 -->
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">AI助手</h1>
-
-                <!-- 设置按钮 -->
-                <button class="btn btn-sm btn-secondary settings-btn" data-bs-toggle="modal" data-bs-target="#settingsModal">
-                    <i class="bi bi-gear-fill"></i> 设置
-                </button>
-            </div>
-
-            <div class="chat-container">
-                <div class="chat-messages" id="chatMessages">
-                    <div class="welcome-container" id="welcomeMessage">
-                        <h3 class="welcome-title">欢迎使用仓库管理系统AI助手</h3>
-                        <p class="welcome-subtitle">您可以直接输入问题，AI将为您解答库存管理相关问题。</p>
-                        <p class="welcome-subtitle">您也可以输入数据库操作指令，如"查询所有物料信息"，AI将自动生成并执行SQL语句。</p>
-                    </div>
-                </div>
-
-                <div class="chat-input">
-                    <div class="d-flex w-100">
-                        <textarea id="userInput" class="form-control" placeholder="输入您的问题..."></textarea>
-                        <button id="sendBtn" class="btn btn-primary btn-send ms-2">
-                            <i class="bi bi-paper-plane"></i> 发送
-                        </button>
-                    </div>
+            <div class="chat-input">
+                <div class="d-flex w-100">
+                    <textarea id="userInput" class="form-control" placeholder="输入您的问题..."></textarea>
+                    <button id="sendBtn" class="btn btn-primary btn-send ms-2">
+                        <i class="bi bi-paper-plane"></i> 发送
+                    </button>
                 </div>
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
 </div>
 
-<!-- 设置模态框 -->
+<!-- 设置模态框（完全保留） -->
 <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -507,7 +538,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
-    // 发送消息到AI助手
+    // 发送消息到AI助手（完全保留）
     async function sendMessage() {
         const userInput = document.getElementById('userInput');
         const message = userInput.value.trim();
@@ -577,12 +608,12 @@
             if (response.data.success) {
                 // 显示成功结果
                 let content = '';
-                
+
                 // 如果有生成的SQL，显示它
                 if (response.data.generatedSql) {
                     content += `<div><strong>生成的SQL:</strong><pre>${response.data.generatedSql}</pre></div>`;
                 }
-                
+
                 // 显示执行结果
                 if (response.data.rows) {
                     // 查询结果
@@ -595,7 +626,7 @@
                             content += `<th>${col}</th>`;
                         });
                         content += '</tr></thead>';
-                        
+
                         // 表体
                         content += '<tbody>';
                         response.data.rows.forEach(row => {
@@ -615,7 +646,7 @@
                     // 更新操作结果
                     content += `<div><strong>执行结果:</strong><p>${response.data.message}</p></div>`;
                 }
-                
+
                 aiMessageElement.innerHTML = `
                     <div class="ai-avatar">
                         <i class="bi bi-robot"></i>
@@ -671,10 +702,10 @@
         }
     }
 
-    // 绑定发送按钮点击事件
+    // 绑定发送按钮点击事件（完全保留）
     document.getElementById('sendBtn').addEventListener('click', sendMessage);
 
-    // 绑定回车键发送消息事件（Shift+Enter换行）
+    // 绑定回车键发送消息事件（Shift+Enter换行）（完全保留）
     document.getElementById('userInput').addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -703,7 +734,7 @@
         }
     });
 
-    // 初始化配置
+    // 初始化配置（完全保留）
     async function initSettings() {
         try {
             const response = await axios.get('/ai/get-config');
@@ -717,7 +748,7 @@
         }
     }
 
-    // 页面加载时初始化配置
+    // 页面加载时初始化配置（完全保留）
     window.addEventListener('DOMContentLoaded', initSettings);
 
     function toggleDeepThought(button) {
