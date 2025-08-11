@@ -1,9 +1,11 @@
 package com.example.demo.controller;
 
+import com.example.demo.entity.Inventory;
 import com.example.demo.entity.InventoryTransaction;
 import com.example.demo.entity.InventoryTransactionType;
 import com.example.demo.entity.Material;
 import com.example.demo.entity.Warehouse;
+import com.example.demo.repository.InventoryRepository;
 import com.example.demo.repository.InventoryTransactionRepository;
 import com.example.demo.repository.MaterialRepository;
 import com.example.demo.repository.WarehouseRepository;
@@ -20,11 +22,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -42,6 +47,9 @@ public class InventoryController {
     
     @Autowired
     private InventoryTransactionTypeRepository inventoryTransactionTypeRepository;
+    
+    @Autowired
+    private InventoryRepository inventoryRepository;
 
     @GetMapping("/inventory")
     public String inventory(
@@ -95,118 +103,113 @@ public class InventoryController {
     }
 
     @PostMapping("/inventory/save")
-    public String saveInventory(
+    public String saveInventoryTransaction(
             @RequestParam String transactionType,
             @RequestParam String transactionDate,
-            @RequestParam String materialCode,
+            @RequestParam(required = false) Long inventoryId, // 出库时使用
+            @RequestParam(required = false) String materialCode,
             @RequestParam(required = false) String materialName,
             @RequestParam(required = false) String specification,
             @RequestParam(required = false) String unit,
             @RequestParam int quantity,
-            @RequestParam String warehouse,
+            @RequestParam(required = false) String warehouse, // 入库时使用，出库时从库存中获取
             @RequestParam(required = false) String supplier,
-            @RequestParam(required = false) String batchNumber,
+            @RequestParam(required = false) String batchNumber, // 入库时使用，出库时从库存中获取
             @RequestParam(required = false) String remark,
             Model model) {
 
-        try {
-            // 解析日期时间
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
-            LocalDateTime transactionTime = LocalDateTime.parse(transactionDate, formatter);
+    try {
+        InventoryTransaction inventoryTransaction = new InventoryTransaction();
+        inventoryTransaction.setTransactionType(inventoryTransactionTypeRepository.findByDirection(transactionType).orElse(null));
+        inventoryTransaction.setTransactionTime(LocalDateTime.parse(transactionDate, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
-            // 创建交易记录
-            InventoryTransaction inventoryTransaction = new InventoryTransaction();
-            
-            // 设置交易单号
-            if (batchNumber != null && !batchNumber.isEmpty()) {
-                inventoryTransaction.setTransactionNo(batchNumber);
-            } else {
-                inventoryTransaction.setTransactionNo("TXN" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        Material material = null;
+        if (materialCode != null && !materialCode.isEmpty()) {
+            material = materialRepository.findByMaterialCode(materialCode).orElse(null);
+        } else if (inventoryId != null) {
+            Inventory inventory = inventoryRepository.findById(inventoryId).orElse(null);
+            if (inventory != null) {
+                material = inventory.getMaterial();
+                // 出库时从库存中获取批次号
+                batchNumber = inventory.getBatchNumber();
             }
-            
-            // 查找或创建交易类型
-            List<InventoryTransactionType> types = inventoryTransactionTypeRepository.findByDirection(transactionType);
-            InventoryTransactionType type;
-            if (types.isEmpty()) {
-                // 如果找不到对应方向的交易类型，创建一个默认的
-                type = new InventoryTransactionType();
-                type.setDirection(transactionType);
-                type.setTypeName(transactionType.equals("IN") ? "入库" : "出库");
-                type.setTypeCode(transactionType.equals("IN") ? "STOCK_IN" : "STOCK_OUT");
-                type = inventoryTransactionTypeRepository.save(type);
-            } else {
-                // 使用第一个找到的类型
-                type = types.get(0);
-            }
-            inventoryTransaction.setTransactionType(type);
-            
-            // 查找或创建物料
-            Optional<Material> materialOpt = materialRepository.findByMaterialCode(materialCode);
-            Material material;
-            if (!materialOpt.isPresent()) {
-                material = new Material();
-                material.setMaterialCode(materialCode);
-                if (materialName != null && !materialName.isEmpty()) {
-                    material.setMaterialName(materialName);
-                } else {
-                    material.setMaterialName(materialCode); // 默认使用物料代码作为名称
-                }
-                if (specification != null && !specification.isEmpty()) {
-                    material.setSpecification(specification);
-                }
-                if (unit != null && !unit.isEmpty()) {
-                    material.setUnit(unit);
-                } else {
-                    material.setUnit("件"); // 默认单位
-                }
-                if (supplier != null && !supplier.isEmpty()) {
-                    material.setSupplier(supplier);
-                }
-                material.setStatus("ACTIVE");
-                material = materialRepository.save(material);
-            } else {
-                material = materialOpt.get();
-            }
-            inventoryTransaction.setMaterial(material);
-            
-            // 设置数量（根据交易类型调整正负号）
-            if ("OUT".equals(transactionType)) {
-                inventoryTransaction.setQuantity(-Math.abs(quantity)); // 出库为负数
-            } else {
-                inventoryTransaction.setQuantity(Math.abs(quantity)); // 入库为正数
-            }
-            
-            // 查找或创建仓库
-            Optional<Warehouse> warehouseOpt = warehouseRepository.findByWarehouseName(warehouse);
-            Warehouse wh;
-            if (!warehouseOpt.isPresent()) {
-                wh = new Warehouse();
-                wh.setWarehouseName(warehouse);
-                wh.setStatus("ACTIVE");
-                wh = warehouseRepository.save(wh);
-            } else {
-                wh = warehouseOpt.get();
-            }
-            inventoryTransaction.setWarehouse(wh);
-            
-            // 设置交易时间
-            inventoryTransaction.setTransactionTime(transactionTime);
-            
-            // 设置备注
-            inventoryTransaction.setNotes(remark);
-            
-            // 设置创建人（这里使用默认值，实际应用中应该从会话中获取）
-            inventoryTransaction.setCreatedBy("System");
-            
-            inventoryTransactionRepository.save(inventoryTransaction);
-
-            // 保存成功后重定向到出入库记录查询页面
-            return "redirect:/inventory";
-        } catch (Exception e) {
-            // 出现错误时返回错误信息并重新显示表单
-            e.printStackTrace();
-            model.addAttribute("error", "保存失败: " + e.getMessage());
-            return "new-inventory";
         }
+
+        if (material == null) {
+            throw new IllegalArgumentException("物料信息不存在");
+        }
+
+        inventoryTransaction.setMaterial(material);
+        inventoryTransaction.setQuantity(quantity);
+        inventoryTransaction.setRemark(remark);
+
+        if ("IN".equals(transactionType)) {
+            // 入库操作
+            Warehouse targetWarehouse = warehouseRepository.findByWarehouseName(warehouse).orElse(null);
+            if (targetWarehouse == null) {
+                throw new IllegalArgumentException("仓库信息不存在");
+            }
+            inventoryTransaction.setWarehouse(targetWarehouse);
+            inventoryTransaction.setSupplier(supplier);
+            inventoryTransaction.setBatchNumber(batchNumber); // 入库时使用用户输入的批次号
+        } else if ("OUT".equals(transactionType)) {
+            // 出库操作
+            Inventory inventory = inventoryRepository.findById(inventoryId).orElse(null);
+            if (inventory == null || inventory.getQuantity() < quantity) {
+                throw new IllegalArgumentException("库存不足");
+            }
+            inventoryTransaction.setWarehouse(inventory.getWarehouse());
+            inventoryTransaction.setBatchNumber(batchNumber); // 出库时使用从库存中获取的批次号
+            // 更新库存数量
+            inventory.setQuantity(inventory.getQuantity() - quantity);
+            inventoryRepository.save(inventory);
+        }
+
+        inventoryTransactionRepository.save(inventoryTransaction);
+
+        return "redirect:/inventory";
+    } catch (Exception e) {
+        model.addAttribute("error", "保存出入库记录失败：" + e.getMessage());
+        return "new-inventory";
+    }
+}
+
+    /**
+     * 获取库存列表的API接口（用于出库选择）
+     */
+    @GetMapping("/api/inventory")
+    @ResponseBody
+    public List<Map<String, Object>> getInventoryList() {
+        List<Inventory> inventories = inventoryRepository.findAll();
+        List<Map<String, Object>> result = new ArrayList<>();
+        
+        for (Inventory inventory : inventories) {
+            if (inventory.getQuantity() > 0) { // 只返回有库存的物料
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", inventory.getId());
+                
+                Material material = inventory.getMaterial();
+                Map<String, Object> materialMap = new HashMap<>();
+                materialMap.put("id", material.getId());
+                materialMap.put("materialCode", material.getMaterialCode());
+                materialMap.put("materialName", material.getMaterialName());
+                materialMap.put("specification", material.getSpecification());
+                materialMap.put("unit", material.getUnit());
+                item.put("material", materialMap);
+                
+                Warehouse warehouse = inventory.getWarehouse();
+                Map<String, Object> warehouseMap = new HashMap<>();
+                warehouseMap.put("id", warehouse.getId());
+                warehouseMap.put("warehouseName", warehouse.getWarehouseName());
+                item.put("warehouse", warehouseMap);
+                
+                item.put("quantity", inventory.getQuantity());
+                item.put("availableQuantity", inventory.getAvailableQuantity());
+                
+                result.add(item);
+            }
+        }
+        
+        return result;
     }
 }

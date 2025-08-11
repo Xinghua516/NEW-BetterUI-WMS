@@ -90,68 +90,8 @@
 <!-- 全局布局容器（与主面板统一） -->
 <div class="app-container">
     <!-- 侧边栏导航（与主面板统一结构） -->
-    <nav class="sidebar">
-        <!-- 侧边栏上部内容 -->
-        <div class="sidebar-inner">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link" href="/">
-                        <i class="bi bi-speedometer2 me-2"></i>
-                        主面板
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/parts-query">
-                        <i class="bi bi-search me-2"></i>
-                        物料信息查询
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/warehouse">
-                        <i class="bi bi-house-door me-2"></i>
-                        库存管理
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/inventory">
-                        <i class="bi bi-arrow-left-right me-2"></i>
-                        出入库管理
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="/new-inventory">
-                        <i class="bi bi-plus-square me-2"></i>
-                        新建出入库单
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/ai-assistant">
-                        <i class="bi bi-robot me-2"></i>
-                        AI助手
-                    </a>
-                </li>
-            </ul>
-        </div>
-
-        <!-- 侧边栏底部固定按钮 -->
-        <div class="sidebar-bottom">
-            <ul class="nav flex-column">
-                <li class="nav-item mb-2">
-                    <a class="nav-link" href="/account">
-                        <i class="bi bi-person-circle me-2"></i>
-                        账号管理
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/settings">
-                        <i class="bi bi-gear me-2"></i>
-                        设置
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    
     <!-- 主内容区（与主面板统一布局） -->
     <main class="main-content">
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -182,52 +122,98 @@
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="materialCode" class="form-label">零件编号 *</label>
-                                <input type="text" class="form-control" id="materialCode" name="materialCode" placeholder="请输入零件编号" required>
+                    <!-- 入库表单部分 -->
+                    <div id="inForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="materialCode" class="form-label">零件编号 *</label>
+                                    <input type="text" class="form-control" id="materialCode" name="materialCode" placeholder="请输入零件编号" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="materialName" class="form-label">零件名称</label>
+                                    <input type="text" class="form-control" id="materialName" name="materialName" placeholder="请输入零件名称">
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="materialName" class="form-label">零件名称</label>
-                                <input type="text" class="form-control" id="materialName" name="materialName" placeholder="请输入零件名称">
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="specification" class="form-label">规格型号</label>
+                                    <input type="text" class="form-control" id="specification" name="specification" placeholder="请输入规格型号">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="unit" class="form-label">单位</label>
+                                    <select class="form-select" id="unit" name="unit">
+                                        <option value="">请选择单位</option>
+                                        <option value="件">件</option>
+                                        <option value="个">个</option>
+                                        <option value="套">套</option>
+                                        <option value="米">米</option>
+                                        <option value="千克">千克</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="specification" class="form-label">规格型号</label>
-                                <input type="text" class="form-control" id="specification" name="specification" placeholder="请输入规格型号">
+                    <!-- 出库表单部分 -->
+                    <div id="outForm" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="material">选择库存物料 *</label>
+                                    <select class="form-control" id="material" name="material" required>
+                                        <option value="">请选择库存物料</option>
+                                        <option th:each="inventory : ${inventoryList}"
+                                                th:value="${inventory.id}"
+                                                th:text="${inventory.material.materialCode} + ' - ' + ${inventory.material.materialName} + ' (库存: ' + ${inventory.quantity} + ', 仓库: ' + ${inventory.warehouse.warehouseName} + ')'">
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="batchNumber">批次号</label>
+                                    <input type="text" class="form-control" id="batchNumber" name="batchNumber" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="outQuantity" class="form-label">数量 *</label>
+                                    <input type="number" class="form-control" id="outQuantity" name="quantity" placeholder="请输入数量" min="1" required>
+                                    <small class="form-text text-muted">最大可出库数量: <span id="maxQuantity">0</span></small>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="unit" class="form-label">单位</label>
-                                <select class="form-select" id="unit" name="unit">
-                                    <option value="">请选择单位</option>
-                                    <option value="件">件</option>
-                                    <option value="个">个</option>
-                                    <option value="套">套</option>
-                                    <option value="米">米</option>
-                                    <option value="千克">千克</option>
-                                </select>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">物料信息</label>
+                                    <div class="border p-3 rounded">
+                                        <p class="mb-1"><strong>零件编号:</strong> <span id="outMaterialCode">-</span></p>
+                                        <p class="mb-1"><strong>零件名称:</strong> <span id="outMaterialName">-</span></p>
+                                        <p class="mb-1"><strong>规格型号:</strong> <span id="outSpecification">-</span></p>
+                                        <p class="mb-1"><strong>单位:</strong> <span id="outUnit">-</span></p>
+                                        <p class="mb-1"><strong>仓库:</strong> <span id="outWarehouse">-</span></p>
+                                        <p class="mb-0"><strong>当前库存:</strong> <span id="outCurrentStock">0</span></p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        
+                        <!-- 隐藏字段存储仓库信息 -->
+                        <input type="hidden" id="outWarehouseHidden" name="warehouse">
                     </div>
 
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="quantity" class="form-label">数量 *</label>
-                                <input type="number" class="form-control" id="quantity" name="quantity" placeholder="请输入数量" min="1" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
+                            <div class="form-group" id="warehouseGroup">
                                 <label for="warehouse" class="form-label">仓库 *</label>
                                 <select class="form-select" id="warehouse" name="warehouse" required>
                                     <option value="">请选择仓库</option>
@@ -238,15 +224,15 @@
                                 </select>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="supplier" class="form-label">供应商/客户</label>
                                 <input type="text" class="form-control" id="supplier" name="supplier" placeholder="请输入供应商或客户名称">
                             </div>
                         </div>
+                    </div>
+
+                    <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="batchNumber" class="form-label">批次号</label>
@@ -289,6 +275,93 @@
         const minutes = String(now.getMinutes()).padStart(2, '0');
         const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
         document.getElementById('transactionDate').value = formattedDateTime;
+        
+        // 交易类型切换事件
+        document.getElementById('transactionType').addEventListener('change', function() {
+            const transactionType = this.value;
+            const inForm = document.getElementById('inForm');
+            const outForm = document.getElementById('outForm');
+            
+            if (transactionType === 'OUT') {
+                inForm.style.display = 'none';
+                outForm.style.display = 'block';
+                loadInventoryItems();
+            } else if (transactionType === 'IN') {
+                inForm.style.display = 'block';
+                outForm.style.display = 'none';
+            } else {
+                inForm.style.display = 'block';
+                outForm.style.display = 'none';
+            }
+        });
+        
+        // 库存选择事件
+        document.getElementById('inventorySelect').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                // 更新物料信息显示
+                document.getElementById('outMaterialCode').textContent = selectedOption.getAttribute('data-material-code');
+                document.getElementById('outMaterialName').textContent = selectedOption.getAttribute('data-material-name');
+                document.getElementById('outSpecification').textContent = selectedOption.getAttribute('data-specification') || '-';
+                document.getElementById('outUnit').textContent = selectedOption.getAttribute('data-unit');
+                document.getElementById('outWarehouse').textContent = selectedOption.getAttribute('data-warehouse-name');
+                document.getElementById('outCurrentStock').textContent = selectedOption.getAttribute('data-quantity');
+                
+                // 更新最大可出库数量
+                const maxQuantity = selectedOption.getAttribute('data-quantity');
+                document.getElementById('maxQuantity').textContent = maxQuantity;
+                document.getElementById('outQuantity').max = maxQuantity;
+                
+                // 设置隐藏的仓库字段值
+                document.getElementById('outWarehouseHidden').value = selectedOption.getAttribute('data-warehouse-name');
+                
+                // 隐藏仓库选择框
+                document.getElementById('warehouseGroup').style.display = 'none';
+            } else {
+                // 清空物料信息显示
+                document.getElementById('outMaterialCode').textContent = '-';
+                document.getElementById('outMaterialName').textContent = '-';
+                document.getElementById('outSpecification').textContent = '-';
+                document.getElementById('outUnit').textContent = '-';
+                document.getElementById('outWarehouse').textContent = '-';
+                document.getElementById('outCurrentStock').textContent = '0';
+                document.getElementById('maxQuantity').textContent = '0';
+                document.getElementById('outQuantity').max = 0;
+                
+                // 清空隐藏的仓库字段值
+                document.getElementById('outWarehouseHidden').value = '';
+                
+                // 显示仓库选择框
+                document.getElementById('warehouseGroup').style.display = 'block';
+            }
+        });
+        
+        // 加载库存项
+        function loadInventoryItems() {
+            fetch('/api/inventory')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('inventorySelect');
+                    select.innerHTML = '<option value="">请选择库存中的物料</option>';
+                    
+                    data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.id;
+                        option.text = `${item.material.materialCode} - ${item.material.materialName} (库存: ${item.quantity}, 仓库: ${item.warehouse.warehouseName})`;
+                        option.setAttribute('data-material-code', item.material.materialCode);
+                        option.setAttribute('data-material-name', item.material.materialName);
+                        option.setAttribute('data-specification', item.material.specification || '');
+                        option.setAttribute('data-unit', item.material.unit);
+                        option.setAttribute('data-quantity', item.quantity);
+                        option.setAttribute('data-warehouse-name', item.warehouse.warehouseName);
+                        option.setAttribute('data-warehouse-id', item.warehouse.id);
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('加载库存数据失败:', error);
+                });
+        }
     });
 </script>
 </body>

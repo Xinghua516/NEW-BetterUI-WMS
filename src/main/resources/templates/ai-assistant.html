@@ -409,69 +409,9 @@
 <body>
 <div class="app-container">
     <!-- 侧边栏导航（仅修改此处，与主面板统一） -->
-    <nav class="sidebar">
-        <!-- 侧边栏上部内容 -->
-        <div class="sidebar-inner">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link" href="/">
-                        <i class="bi bi-speedometer2 me-2"></i>
-                        主面板
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/parts-query">
-                        <i class="bi bi-search me-2"></i>
-                        物料信息查询
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/warehouse">
-                        <i class="bi bi-house-door me-2"></i>
-                        库存管理
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/inventory">
-                        <i class="bi bi-arrow-left-right me-2"></i>
-                        出入库管理
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/new-inventory">
-                        <i class="bi bi-plus-square me-2"></i>
-                        新建出入库单
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="/ai-assistant">
-                        <i class="bi bi-robot me-2"></i>
-                        AI助手
-                    </a>
-                </li>
-            </ul>
-        </div>
-
-        <!-- 侧边栏底部固定按钮 -->
-        <div class="sidebar-bottom">
-            <ul class="nav flex-column">
-                <li class="nav-item mb-2">
-                    <a class="nav-link" href="/account">
-                        <i class="bi bi-person-circle me-2"></i>
-                        账号管理
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/settings">
-                        <i class="bi bi-gear me-2"></i>
-                        设置
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-
-    <!-- 主内容区（完全保留，未做任何修改） -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    
+    <!-- 主内容区（与主面板统一布局） -->
     <main class="main-content">
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h1 class="h2">AI助手</h1>

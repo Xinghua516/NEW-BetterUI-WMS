@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sidebar Fragment</title>
+</head>
+<body>
+    <!-- 侧边栏片段 -->
+    <nav th:fragment="sidebar" class="sidebar">
+        <!-- 侧边栏上部内容 -->
+        <div class="sidebar-inner">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}" data-page="index">
+                        <i class="bi bi-speedometer2 me-2"></i>
+                        主面板
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/parts-query}" data-page="parts-query">
+                        <i class="bi bi-search me-2"></i>
+                        物料信息查询
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/warehouse}" data-page="warehouse">
+                        <i class="bi bi-house-door me-2"></i>
+                        库存管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/inventory}" data-page="inventory">
+                        <i class="bi bi-arrow-left-right me-2"></i>
+                        出入库管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/new-inventory}" data-page="new-inventory">
+                        <i class="bi bi-plus-square me-2"></i>
+                        新建出入库单
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/ai-assistant}" data-page="ai-assistant">
+                        <i class="bi bi-robot me-2"></i>
+                        AI助手
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 侧边栏底部固定按钮 -->
+        <div class="sidebar-bottom">
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2">
+                    <a class="nav-link" th:href="@{/account}" data-page="account">
+                        <i class="bi bi-person-circle me-2"></i>
+                        账号管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/settings}" data-page="settings">
+                        <i class="bi bi-gear me-2"></i>
+                        设置
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    
+    <script>
+        // 页面加载完成后设置当前页面的导航项为激活状态
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取当前页面路径
+            var pathname = window.location.pathname;
+            
+            // 如果是根路径，则设置为主面板
+            if (pathname === '/' || pathname === '') {
+                pathname = '/index';
+            }
+            
+            // 查找所有导航链接
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            // 遍历所有链接，找到匹配当前页面的链接并添加active类
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === pathname || 
+                    (pathname === '/index' && link.getAttribute('href') === '/') ||
+                    link.getAttribute('data-page') === pathname.substring(1)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
