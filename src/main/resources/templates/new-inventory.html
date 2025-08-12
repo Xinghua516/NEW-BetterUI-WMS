@@ -106,12 +106,17 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="transactionType" class="form-label">交易类型 *</label>
-                                <select class="form-select" id="transactionType" name="transactionType" required>
+                                <label for="transactionTypeId" class="form-label">交易类型 *</label>
+                                <select class="form-select" id="transactionTypeId" name="transactionTypeId" required>
                                     <option value="">请选择交易类型</option>
-                                    <option value="IN">入库</option>
-                                    <option value="OUT">出库</option>
+                                    <option th:each="type : ${transactionTypes}" 
+                                            th:value="${type.id}" 
+                                            th:text="${type.typeName} + ' (' + ${type.direction} + ')'"
+                                            th:attr="data-direction=${type.direction}">
+                                    </option>
                                 </select>
+                                <!-- 隐藏字段用于保持与原有代码的兼容性 -->
+                                <input type="hidden" id="transactionType" name="transactionType" value="">
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -160,37 +165,54 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="batchNumberIn">批次号</label>
+                                    <input type="text" class="form-control" id="batchNumberIn" name="batchNumber" readonly>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- 出库表单部分 -->
                     <div id="outForm" style="display: none;">
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
+                            <!-- 使用Flexbox布局使两个列对齐 -->
+                            <div class="col-md-6 d-flex flex-column">
+                                <div class="form-group mb-3">
                                     <label for="material">选择库存物料 *</label>
-                                    <select class="form-control" id="material" name="material" required>
+                                    <select class="form-control" id="material" name="inventoryId" required>
                                         <option value="">请选择库存物料</option>
                                         <option th:each="inventory : ${inventoryList}"
                                                 th:value="${inventory.id}"
-                                                th:text="${inventory.material.materialCode} + ' - ' + ${inventory.material.materialName} + ' (库存: ' + ${inventory.quantity} + ', 仓库: ' + ${inventory.warehouse.warehouseName} + ')'">
+                                                th:text="${inventory.material.materialCode} + ' - ' + ${inventory.material.materialName} + ' (库存: ' + ${inventory.quantity} + ', 仓库: ' + ${inventory.warehouse.warehouseName} + ')'"
+                                                th:attr="data-material-code=${inventory.material.materialCode}, data-material-name=${inventory.material.materialName}, data-specification=${inventory.material.specification ?: ''}, data-unit=${inventory.material.unit}, data-quantity=${inventory.quantity}, data-warehouse-name=${inventory.warehouse.warehouseName}, data-warehouse-id=${inventory.warehouse.id}">
                                         </option>
                                     </select>
                                 </div>
-
+                                
                                 <div class="form-group">
-                                    <label for="batchNumber">批次号</label>
-                                    <input type="text" class="form-control" id="batchNumber" name="batchNumber" readonly>
+                                    <label for="batchNumberOut">批次号</label>
+                                    <input type="text" class="form-control" id="batchNumberOut" name="batchNumber" readonly>
+                                </div>
+                                
+                                <!-- 移动供应商组件到数量组件下方 -->
+                                <div class="form-group">
+                                    <label for="supplier" class="form-label">供应商/客户</label>
+                                    <input type="text" class="form-control" id="supplier" name="supplier" placeholder="请输入供应商或客户名称">
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label for="outQuantity" class="form-label">数量 *</label>
                                     <input type="number" class="form-control" id="outQuantity" name="quantity" placeholder="请输入数量" min="1" required>
                                     <small class="form-text text-muted">最大可出库数量: <span id="maxQuantity">0</span></small>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -206,39 +228,15 @@
                                 </div>
                             </div>
                         </div>
-                        
+    
                         <!-- 隐藏字段存储仓库信息 -->
                         <input type="hidden" id="outWarehouseHidden" name="warehouse">
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group" id="warehouseGroup">
-                                <label for="warehouse" class="form-label">仓库 *</label>
-                                <select class="form-select" id="warehouse" name="warehouse" required>
-                                    <option value="">请选择仓库</option>
-                                    <option value="原材料仓">原材料仓</option>
-                                    <option value="半成品仓">半成品仓</option>
-                                    <option value="成品仓">成品仓</option>
-                                    <option value="备品备件仓">备品备件仓</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="supplier" class="form-label">供应商/客户</label>
-                                <input type="text" class="form-control" id="supplier" name="supplier" placeholder="请输入供应商或客户名称">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="batchNumber" class="form-label">批次号</label>
-                                <input type="text" class="form-control" id="batchNumber" name="batchNumber" placeholder="请输入批次号">
-                            </div>
-                        </div>
+                        
+                        <!-- 添加隐藏字段以确保出库表单可以正确提交 -->
+                        <input type="hidden" id="outMaterialCodeHidden" name="materialCode">
+                        <input type="hidden" id="outMaterialNameHidden" name="materialName">
+                        <input type="hidden" id="outSpecificationHidden" name="specification">
+                        <input type="hidden" id="outUnitHidden" name="unit">
                     </div>
 
                     <div class="form-group">
@@ -250,7 +248,7 @@
                         <button type="button" class="btn btn-secondary" onclick="window.history.back();">
                             <i class="bi bi-arrow-left me-1"></i>返回
                         </button>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="saveButton">
                             <i class="bi bi-save me-1"></i>保存
                         </button>
                     </div>
@@ -276,27 +274,49 @@
         const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
         document.getElementById('transactionDate').value = formattedDateTime;
         
-        // 交易类型切换事件
-        document.getElementById('transactionType').addEventListener('change', function() {
-            const transactionType = this.value;
+        // 不再在页面加载时自动生成批次号，而是等用户进行相关操作后再生成
+        
+        // 交易类型选择事件
+        document.getElementById('transactionTypeId').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            let direction = selectedOption.getAttribute('data-direction');
+            
+            // 如果没有data-direction属性，则尝试从选项文本中提取
+            if (!direction) {
+                const text = selectedOption.text;
+                if (text.includes('(IN)')) {
+                    direction = 'IN';
+                } else if (text.includes('(OUT)')) {
+                    direction = 'OUT';
+                }
+            }
+            
+            // 设置隐藏字段的值
+            document.getElementById('transactionType').value = direction || '';
+            
+            // 触发表单显示逻辑
             const inForm = document.getElementById('inForm');
             const outForm = document.getElementById('outForm');
             
-            if (transactionType === 'OUT') {
+            if (direction === 'OUT') {
                 inForm.style.display = 'none';
                 outForm.style.display = 'block';
-                loadInventoryItems();
-            } else if (transactionType === 'IN') {
+                // 出库表单不自动生成批次号
+            } else if (direction === 'IN') {
                 inForm.style.display = 'block';
                 outForm.style.display = 'none';
+                // 入库表单在切换到该表单时生成批次号
+                generateBatchNumberForInForm();
             } else {
                 inForm.style.display = 'block';
                 outForm.style.display = 'none';
+                // 默认显示入库表单并生成批次号
+                generateBatchNumberForInForm();
             }
         });
-        
+
         // 库存选择事件
-        document.getElementById('inventorySelect').addEventListener('change', function() {
+        document.getElementById('material').addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
             if (selectedOption.value) {
                 // 更新物料信息显示
@@ -315,6 +335,16 @@
                 // 设置隐藏的仓库字段值
                 document.getElementById('outWarehouseHidden').value = selectedOption.getAttribute('data-warehouse-name');
                 
+                // 设置隐藏的物料信息字段值
+                document.getElementById('outMaterialCodeHidden').value = selectedOption.getAttribute('data-material-code');
+                document.getElementById('outMaterialNameHidden').value = selectedOption.getAttribute('data-material-name');
+                document.getElementById('outSpecificationHidden').value = selectedOption.getAttribute('data-specification') || '';
+                document.getElementById('outUnitHidden').value = selectedOption.getAttribute('data-unit');
+                
+                // 不再在选择物料时生成批次号，而是等用户输入数量后再生成
+                // 清空批次号显示
+                document.getElementById('batchNumberOut').value = '';
+                
                 // 隐藏仓库选择框
                 document.getElementById('warehouseGroup').style.display = 'none';
             } else {
@@ -325,44 +355,107 @@
                 document.getElementById('outUnit').textContent = '-';
                 document.getElementById('outWarehouse').textContent = '-';
                 document.getElementById('outCurrentStock').textContent = '0';
+                
+                // 重置最大可出库数量
                 document.getElementById('maxQuantity').textContent = '0';
                 document.getElementById('outQuantity').max = 0;
                 
-                // 清空隐藏的仓库字段值
-                document.getElementById('outWarehouseHidden').value = '';
+                // 清空隐藏的物料信息字段值
+                document.getElementById('outMaterialCodeHidden').value = '';
+                document.getElementById('outMaterialNameHidden').value = '';
+                document.getElementById('outSpecificationHidden').value = '';
+                document.getElementById('outUnitHidden').value = '';
                 
                 // 显示仓库选择框
                 document.getElementById('warehouseGroup').style.display = 'block';
             }
         });
+
+        // 数量输入框变化事件（出库）
+        document.getElementById('outQuantity').addEventListener('change', function() {
+            // 只有当数量大于0时才生成批次号
+            const quantity = parseInt(this.value);
+            if (quantity > 0) {
+                generateBatchNumberForOutForm();
+            }
+        });
         
-        // 加载库存项
-        function loadInventoryItems() {
-            fetch('/api/inventory')
-                .then(response => response.json())
-                .then(data => {
-                    const select = document.getElementById('inventorySelect');
-                    select.innerHTML = '<option value="">请选择库存中的物料</option>';
-                    
-                    data.forEach(item => {
-                        const option = document.createElement('option');
-                        option.value = item.id;
-                        option.text = `${item.material.materialCode} - ${item.material.materialName} (库存: ${item.quantity}, 仓库: ${item.warehouse.warehouseName})`;
-                        option.setAttribute('data-material-code', item.material.materialCode);
-                        option.setAttribute('data-material-name', item.material.materialName);
-                        option.setAttribute('data-specification', item.material.specification || '');
-                        option.setAttribute('data-unit', item.material.unit);
-                        option.setAttribute('data-quantity', item.quantity);
-                        option.setAttribute('data-warehouse-name', item.warehouse.warehouseName);
-                        option.setAttribute('data-warehouse-id', item.warehouse.id);
-                        select.appendChild(option);
-                    });
-                })
-                .catch(error => {
-                    console.error('加载库存数据失败:', error);
-                });
-        }
+        // 表单提交前的验证和处理
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const transactionType = document.getElementById('transactionType').value;
+            
+            // 如果是出库操作，检查是否选择了物料和输入了数量
+            if (transactionType === 'OUT') {
+                const inventoryId = document.getElementById('material').value;
+                const quantity = document.getElementById('outQuantity').value;
+                
+                if (!inventoryId) {
+                    e.preventDefault();
+                    alert('请选择库存物料');
+                    return false;
+                }
+                
+                if (!quantity || parseInt(quantity) <= 0) {
+                    e.preventDefault();
+                    alert('请输入有效的出库数量');
+                    return false;
+                }
+                
+                // 检查是否有批次号
+                const batchNumber = document.getElementById('batchNumberOut').value;
+                if (!batchNumber) {
+                    e.preventDefault();
+                    alert('批次号未生成，请确保已输入数量并等待批次号生成');
+                    return false;
+                }
+            }
+            
+            // 如果是入库操作，检查必要字段
+            if (transactionType === 'IN') {
+                const materialCode = document.getElementById('materialCode').value;
+                if (!materialCode) {
+                    e.preventDefault();
+                    alert('请输入零件编号');
+                    return false;
+                }
+            }
+        });
+        
+        // 交易日期变化事件（仅对入库表单）
+        document.getElementById('transactionDate').addEventListener('change', function() {
+            const transactionType = document.getElementById('transactionType').value;
+            // 只有在入库表单中才根据日期变化生成批次号
+            if (transactionType === 'IN') {
+                generateBatchNumberForInForm();
+            }
+        });
     });
+    
+    // 生成入库批次号
+    function generateBatchNumberForInForm() {
+        const transactionDate = document.getElementById('transactionDate').value;
+        if (transactionDate) {
+            fetch(`/api/generate-transaction-no?transactionDate=${transactionDate}`)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('batchNumberIn').value = data;
+                })
+                .catch(error => console.error('Error generating transaction number:', error));
+        }
+    }
+    
+    // 生成出库批次号
+    function generateBatchNumberForOutForm() {
+        const transactionDate = document.getElementById('transactionDate').value;
+        if (transactionDate) {
+            fetch(`/api/generate-transaction-no?transactionDate=${transactionDate}`)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('batchNumberOut').value = data;
+                })
+                .catch(error => console.error('Error generating transaction number:', error));
+        }
+    }
 </script>
 </body>
 </html>

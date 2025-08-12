@@ -97,14 +97,33 @@ public class InventoryController {
         return "inventory";
     }
 
+    /**
+     * 获取库存列表（用于new-inventory页面的Thymeleaf模板）
+     */
     @GetMapping("/new-inventory")
-    public String newInventory() {
+    public String newInventory(Model model) {
+        List<Inventory> inventories = inventoryRepository.findAll();
+        List<Inventory> availableInventories = new ArrayList<>();
+        
+        // 只返回有库存的物料
+        for (Inventory inventory : inventories) {
+            if (inventory.getQuantity() > 0) {
+                availableInventories.add(inventory);
+            }
+        }
+        
+        // 获取所有库存交易类型
+        List<InventoryTransactionType> transactionTypes = inventoryTransactionTypeRepository.findAll();
+        
+        model.addAttribute("inventoryList", availableInventories);
+        model.addAttribute("transactionTypes", transactionTypes);
         return "new-inventory";
     }
 
     @PostMapping("/inventory/save")
     public String saveInventoryTransaction(
-            @RequestParam String transactionType,
+            @RequestParam(required = false) Long transactionTypeId, // 使用具体的交易类型ID
+            @RequestParam String transactionType, // 保留原有的交易类型参数（IN/OUT）
             @RequestParam String transactionDate,
             @RequestParam(required = false) Long inventoryId, // 出库时使用
             @RequestParam(required = false) String materialCode,
@@ -119,19 +138,43 @@ public class InventoryController {
             Model model) {
 
     try {
+        System.out.println("保存库存交易记录: transactionType=" + transactionType + ", inventoryId=" + inventoryId + ", quantity=" + quantity);
+        
         InventoryTransaction inventoryTransaction = new InventoryTransaction();
-        inventoryTransaction.setTransactionType(inventoryTransactionTypeRepository.findByDirection(transactionType).orElse(null));
-        inventoryTransaction.setTransactionTime(LocalDateTime.parse(transactionDate, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        
+        // 解析交易时间
+        LocalDateTime transactionTime = LocalDateTime.parse(transactionDate, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        
+        // 生成批次号（transactionNo）
+        String transactionNo = generateTransactionNo(transactionTime);
+        inventoryTransaction.setTransactionNo(transactionNo);
+        System.out.println("生成的批次号: " + transactionNo);
+        
+        // 根据ID获取具体的交易类型
+        if (transactionTypeId != null) {
+            InventoryTransactionType transactionTypeEntity = inventoryTransactionTypeRepository.findById(transactionTypeId).orElse(null);
+            inventoryTransaction.setTransactionType(transactionTypeEntity);
+        } else {
+            // 保持原有的逻辑，根据方向查找交易类型
+            List<InventoryTransactionType> transactionTypes = inventoryTransactionTypeRepository.findByDirection(transactionType);
+            if (!transactionTypes.isEmpty()) {
+                inventoryTransaction.setTransactionType(transactionTypes.get(0));
+            }
+        }
+        
+        inventoryTransaction.setTransactionTime(transactionTime);
 
         Material material = null;
         if (materialCode != null && !materialCode.isEmpty()) {
+            // 入库情况：根据物料代码查找物料
             material = materialRepository.findByMaterialCode(materialCode).orElse(null);
+            System.out.println("入库物料: materialCode=" + materialCode);
         } else if (inventoryId != null) {
+            // 出库情况：根据库存ID查找物料
             Inventory inventory = inventoryRepository.findById(inventoryId).orElse(null);
             if (inventory != null) {
                 material = inventory.getMaterial();
-                // 出库时从库存中获取批次号
-                batchNumber = inventory.getBatchNumber();
+                System.out.println("出库物料: inventoryId=" + inventoryId);
             }
         }
 
@@ -141,38 +184,102 @@ public class InventoryController {
 
         inventoryTransaction.setMaterial(material);
         inventoryTransaction.setQuantity(quantity);
-        inventoryTransaction.setRemark(remark);
+        inventoryTransaction.setNotes(remark);
 
         if ("IN".equals(transactionType)) {
+            System.out.println("处理入库操作");
             // 入库操作
             Warehouse targetWarehouse = warehouseRepository.findByWarehouseName(warehouse).orElse(null);
             if (targetWarehouse == null) {
                 throw new IllegalArgumentException("仓库信息不存在");
             }
             inventoryTransaction.setWarehouse(targetWarehouse);
-            inventoryTransaction.setSupplier(supplier);
-            inventoryTransaction.setBatchNumber(batchNumber); // 入库时使用用户输入的批次号
         } else if ("OUT".equals(transactionType)) {
+            System.out.println("处理出库操作: inventoryId=" + inventoryId + ", quantity=" + quantity);
             // 出库操作
             Inventory inventory = inventoryRepository.findById(inventoryId).orElse(null);
-            if (inventory == null || inventory.getQuantity() < quantity) {
-                throw new IllegalArgumentException("库存不足");
+            if (inventory == null) {
+                throw new IllegalArgumentException("库存记录不存在");
+            }
+            if (inventory.getQuantity() < quantity) {
+                throw new IllegalArgumentException("库存不足，当前库存: " + inventory.getQuantity());
             }
             inventoryTransaction.setWarehouse(inventory.getWarehouse());
-            inventoryTransaction.setBatchNumber(batchNumber); // 出库时使用从库存中获取的批次号
             // 更新库存数量
             inventory.setQuantity(inventory.getQuantity() - quantity);
             inventoryRepository.save(inventory);
+            System.out.println("更新库存数量: 原数量=" + (inventory.getQuantity() + quantity) + ", 新数量=" + inventory.getQuantity());
         }
 
         inventoryTransactionRepository.save(inventoryTransaction);
+        System.out.println("库存交易记录保存成功");
 
         return "redirect:/inventory";
     } catch (Exception e) {
+        System.err.println("保存库存交易记录失败: " + e.getMessage());
+        e.printStackTrace();
+        
+        // 获取库存列表和交易类型列表，以便在出错时重新显示表单
+        List<Inventory> inventories = inventoryRepository.findAll();
+        List<Inventory> availableInventories = new ArrayList<>();
+        
+        for (Inventory inventory : inventories) {
+            if (inventory.getQuantity() > 0) {
+                availableInventories.add(inventory);
+            }
+        }
+        
+        List<InventoryTransactionType> transactionTypes = inventoryTransactionTypeRepository.findAll();
+        
+        model.addAttribute("inventoryList", availableInventories);
+        model.addAttribute("transactionTypes", transactionTypes);
         model.addAttribute("error", "保存出入库记录失败：" + e.getMessage());
         return "new-inventory";
     }
 }
+
+    /**
+     * 生成交易批次号
+     * 格式：TR+年月日（月和日不满两位就在前面+0）+（小时数字+25）+（分钟数字+15）+（秒数+秒数的1/2次方）
+     * @param transactionTime 交易时间
+     * @return 生成的交易号
+     */
+    private String generateTransactionNo(LocalDateTime transactionTime) {
+        if (transactionTime == null) {
+            transactionTime = LocalDateTime.now();
+        }
+        
+        // TR+年月日
+        String datePart = "TR" + String.format("%04d%02d%02d", 
+            transactionTime.getYear(), 
+            transactionTime.getMonthValue(), 
+            transactionTime.getDayOfMonth());
+        
+        // 小时数字+25
+        int hour = transactionTime.getHour() + 25;
+        
+        // 分钟数字+15
+        int minute = transactionTime.getMinute() + 15;
+        
+        // 秒数+秒数的1/2次方
+        int second = transactionTime.getSecond();
+        double secondWithSqrt = second + Math.sqrt(second);
+        
+        // 组合时间部分，格式化为整数部分（保留更多精度以符合要求）
+        String timePart = String.format("%02d%02d%03d", hour, minute, (int) Math.round(secondWithSqrt * 10)); // 保留1位小数的精度
+        
+        return datePart + timePart;
+    }
+
+    /**
+     * 生成交易批次号的API接口
+     */
+    @GetMapping("/api/generate-transaction-no")
+    @ResponseBody
+    public String generateTransactionNo(@RequestParam String transactionDate) {
+        LocalDateTime transactionTime = LocalDateTime.parse(transactionDate, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+        return generateTransactionNo(transactionTime);
+    }
 
     /**
      * 获取库存列表的API接口（用于出库选择）
