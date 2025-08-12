@@ -208,6 +208,7 @@
                             <th>零件编号</th>
                             <th>零件名称</th>
                             <th>规格</th>
+                            <th>批次号</th>
                             <th>数量</th>
                             <th>仓库</th>
                             <th>操作人</th>
@@ -226,6 +227,7 @@
                             <td th:text="${record.material != null ? record.material.materialCode : '-'}">零件编号</td>
                             <td th:text="${record.material != null ? record.material.materialName : '-'}">零件名称</td>
                             <td th:text="${record.material != null ? record.material.specification : '-'}">规格</td>
+                            <td th:text="${record.batch != null ? record.batch.batchNumber : record.transactionNo}">批次号</td>
                             <td th:text="${record.quantity}">数量</td>
                             <td th:text="${record.warehouse != null ? record.warehouse.warehouseName : '-'}">仓库</td>
                             <td>-</td> <!-- 保持原有逻辑 -->

@@ -193,7 +193,8 @@
                                     </select>
                                 </div>
                                 
-                                <div class="form-group">
+                                <!-- 批次选择 -->
+  。                                <div class="form-group">
                                     <label for="batchNumberOut">批次号</label>
                                     <input type="text" class="form-control" id="batchNumberOut" name="batchNumber" readonly>
                                 </div>
@@ -341,10 +342,6 @@
                 document.getElementById('outSpecificationHidden').value = selectedOption.getAttribute('data-specification') || '';
                 document.getElementById('outUnitHidden').value = selectedOption.getAttribute('data-unit');
                 
-                // 不再在选择物料时生成批次号，而是等用户输入数量后再生成
-                // 清空批次号显示
-                document.getElementById('batchNumberOut').value = '';
-                
                 // 隐藏仓库选择框
                 document.getElementById('warehouseGroup').style.display = 'none';
             } else {
@@ -366,8 +363,9 @@
                 document.getElementById('outSpecificationHidden').value = '';
                 document.getElementById('outUnitHidden').value = '';
                 
-                // 显示仓库选择框
-                document.getElementById('warehouseGroup').style.display = 'block';
+                // 隐藏批次选择
+                document.getElementById('batchSelectionGroup').style.display = 'none';
+                
             }
         });
 
@@ -429,6 +427,7 @@
                 generateBatchNumberForInForm();
             }
         });
+    
     });
     
     // 生成入库批次号

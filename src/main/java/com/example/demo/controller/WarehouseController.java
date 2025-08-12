@@ -4,10 +4,12 @@ import com.example.demo.entity.Inventory;
 import com.example.demo.entity.InventoryAlert;
 import com.example.demo.entity.Material;
 import com.example.demo.entity.MaterialCategory;
+import com.example.demo.entity.MaterialBatch;
 import com.example.demo.repository.InventoryAlertRepository;
 import com.example.demo.repository.InventoryRepository;
 import com.example.demo.repository.MaterialCategoryRepository;
 import com.example.demo.repository.MaterialRepository;
+import com.example.demo.service.MaterialBatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Optional;
+import java.util.List;
 
 @Controller
 public class WarehouseController {
@@ -33,6 +36,9 @@ public class WarehouseController {
 
     @Autowired
     private MaterialCategoryRepository materialCategoryRepository; // 新增：物料分类仓库
+    
+    @Autowired
+    private MaterialBatchService materialBatchService; // 新增：批次服务
 
     @GetMapping("/warehouse")
     public String warehouse(Model model,
@@ -54,6 +60,10 @@ public class WarehouseController {
             // 获取物料的当前库存数量
             Optional<Inventory> inventoryOptional = inventoryRepository.findByMaterialId(material.getId());
             inventoryOptional.ifPresent(inventory -> material.setCurrentStock(inventory.getQuantity())); // 绑定库存数量
+            
+            // 获取物料的批次信息
+            List<MaterialBatch> batches = materialBatchService.findByMaterialId(material.getId());
+            material.setBatchCount(batches.size()); // 设置批次数
         });
 
         // 获取库存预警数据

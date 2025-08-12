@@ -80,7 +80,36 @@ CREATE TABLE inventory (
                            INDEX idx_warehouse_id (warehouse_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存表';
 
--- 5. 库存预警设置表
+-- 5. 物料批次表（新增）
+-- 存储物料的批次信息
+CREATE TABLE material_batches (
+                                  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                  batch_number VARCHAR(50) NOT NULL UNIQUE COMMENT '批次号',
+                                  material_id BIGINT NOT NULL COMMENT '物料ID',
+                                  warehouse_id BIGINT NOT NULL COMMENT '仓库ID',
+                                  quantity INT NOT NULL DEFAULT 0 COMMENT '当前批次库存数量',
+                                  available_quantity INT NOT NULL DEFAULT 0 COMMENT '可用批次库存数量',
+                                  locked_quantity INT NOT NULL DEFAULT 0 COMMENT '锁定批次库存数量',
+                                  production_date DATE COMMENT '生产日期',
+                                  expiry_date DATE COMMENT '过期日期',
+                                  supplier VARCHAR(100) COMMENT '供应商',
+                                  manufacturer VARCHAR(100) COMMENT '制造商',
+                                  notes TEXT COMMENT '备注',
+                                  is_active BOOLEAN NOT NULL DEFAULT TRUE COMMENT '是否激活',
+                                  created_by VARCHAR(50) COMMENT '创建人',
+                                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                  updated_by VARCHAR(50) COMMENT '更新人',
+                                  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                  FOREIGN KEY (material_id) REFERENCES materials(id) ON DELETE CASCADE,
+                                  FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON DELETE CASCADE,
+                                  UNIQUE KEY uk_batch_material_warehouse (batch_number, material_id, warehouse_id),
+                                  INDEX idx_material_id (material_id),
+                                  INDEX idx_warehouse_id (warehouse_id),
+                                  INDEX idx_batch_number (batch_number),
+                                  INDEX idx_expiry_date (expiry_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='物料批次表';
+
+-- 6. 库存预警设置表
 -- 存储各物料的库存预警阈值设置
 CREATE TABLE inventory_alert_settings (
                                           id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -99,7 +128,7 @@ CREATE TABLE inventory_alert_settings (
                                           INDEX idx_material_id (material_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存预警设置表';
 
--- 6. 库存预警表
+-- 7. 库存预警表
 -- 存储当前需要预警的库存信息（低库存或高库存）
 CREATE TABLE inventory_alerts (
                                   id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -120,7 +149,7 @@ CREATE TABLE inventory_alerts (
                                   INDEX idx_alert_type (alert_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存预警表';
 
--- 7. 出入库类型表
+-- 8. 出入库类型表
 -- 定义出入库的类型
 CREATE TABLE inventory_transaction_types (
                                              id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -131,7 +160,7 @@ CREATE TABLE inventory_transaction_types (
                                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='出入库类型表';
 
--- 8. 出入库记录表
+-- 9. 出入库记录表
 -- 记录所有物料的出入库操作
 CREATE TABLE inventory_transactions (
                                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -139,6 +168,7 @@ CREATE TABLE inventory_transactions (
                                         transaction_type_id BIGINT NOT NULL COMMENT '交易类型ID',
                                         material_id BIGINT NOT NULL COMMENT '物料ID',
                                         warehouse_id BIGINT NOT NULL COMMENT '仓库ID',
+                                        batch_id BIGINT COMMENT '批次ID（新增）',
                                         quantity INT NOT NULL COMMENT '数量，正数表示入库，负数表示出库',
                                         unit_cost DECIMAL(12,2) COMMENT '单位成本',
                                         total_cost DECIMAL(12,2) COMMENT '总成本',
@@ -150,10 +180,12 @@ CREATE TABLE inventory_transactions (
                                         FOREIGN KEY (transaction_type_id) REFERENCES inventory_transaction_types(id),
                                         FOREIGN KEY (material_id) REFERENCES materials(id) ON DELETE CASCADE,
                                         FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON DELETE CASCADE,
+                                        FOREIGN KEY (batch_id) REFERENCES material_batches(id) ON DELETE SET NULL,
                                         INDEX idx_transaction_time (transaction_time),
                                         INDEX idx_material_id (material_id),
                                         INDEX idx_warehouse_id (warehouse_id),
-                                        INDEX idx_transaction_type_id (transaction_type_id)
+                                        INDEX idx_transaction_type_id (transaction_type_id),
+                                        INDEX idx_batch_id (batch_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='出入库记录表';
 
 -- 初始化出入库类型数据
@@ -195,6 +227,15 @@ BEGIN
         INSERT INTO inventory (material_id, warehouse_id, quantity, available_quantity)
         VALUES (NEW.material_id, NEW.warehouse_id, NEW.quantity, NEW.quantity);
     END IF;
+    
+    -- 如果有批次ID，同时更新批次库存
+    IF NEW.batch_id IS NOT NULL THEN
+        UPDATE material_batches
+        SET quantity = quantity + NEW.quantity,
+            available_quantity = available_quantity + NEW.quantity,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = NEW.batch_id;
+    END IF;
 END$$
 DELIMITER ;
 
@@ -202,6 +243,68 @@ DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER trg_after_inventory_update
     AFTER UPDATE ON inventory
+    FOR EACH ROW
+BEGIN
+    -- 声明变量
+    DECLARE min_stock_val INT;
+    DECLARE max_stock_val INT;
+
+    -- 获取该物料在特定仓库的预警阈值设置
+    SELECT COALESCE(min_stock, 0), COALESCE(max_stock, 0) INTO min_stock_val, max_stock_val
+    FROM inventory_alert_settings
+    WHERE material_id = NEW.material_id
+      AND (warehouse_id = NEW.warehouse_id OR warehouse_id IS NULL)
+    ORDER BY warehouse_id DESC
+    LIMIT 1;
+
+    -- 处理低库存预警
+    IF NEW.quantity <= min_stock_val THEN
+        -- 插入或更新低库存预警记录
+        INSERT INTO inventory_alerts
+        (material_id, warehouse_id, alert_type, current_quantity, threshold_value)
+        VALUES
+            (NEW.material_id, NEW.warehouse_id, 'LOW_STOCK', NEW.quantity, min_stock_val)
+        ON DUPLICATE KEY UPDATE
+                             current_quantity = NEW.quantity,
+                             threshold_value = min_stock_val,
+                             is_processed = FALSE,
+                             processed_by = NULL,
+                             processed_time = NULL;
+    ELSE
+        -- 库存高于最低阈值，删除低库存预警
+        DELETE FROM inventory_alerts
+        WHERE material_id = NEW.material_id
+          AND warehouse_id = NEW.warehouse_id
+          AND alert_type = 'LOW_STOCK';
+    END IF;
+
+    -- 处理高库存预警
+    IF max_stock_val > 0 AND NEW.quantity >= max_stock_val THEN
+        -- 插入或更新高库存预警记录
+        INSERT INTO inventory_alerts
+        (material_id, warehouse_id, alert_type, current_quantity, threshold_value)
+        VALUES
+            (NEW.material_id, NEW.warehouse_id, 'HIGH_STOCK', NEW.quantity, max_stock_val)
+        ON DUPLICATE KEY UPDATE
+                             current_quantity = NEW.quantity,
+                             threshold_value = max_stock_val,
+                             is_processed = FALSE,
+                             processed_by = NULL,
+                             processed_time = NULL;
+    ELSE
+        -- 库存低于最高阈值，删除高库存预警
+        DELETE FROM inventory_alerts
+        WHERE material_id = NEW.material_id
+          AND warehouse_id = NEW.warehouse_id
+          AND alert_type = 'HIGH_STOCK';
+    END IF;
+END$$
+DELIMITER ;
+
+-- 创建触发器：当批次库存更新时，自动检查并更新批次库存预警表
+DELIMITER $$
+CREATE TRIGGER trg_after_batch_update
+    AFTER UPDATE ON material_batches
     FOR EACH ROW
 BEGIN
     -- 声明变量

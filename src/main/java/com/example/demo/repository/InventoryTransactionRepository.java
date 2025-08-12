@@ -68,4 +68,11 @@ public interface InventoryTransactionRepository extends JpaRepository<InventoryT
            "WHERE t.material.materialCode = ?1 " +
            "ORDER BY t.transactionTime DESC")
     Page<InventoryTransaction> findByItemCode(String materialCode, Pageable pageable);
+
+    /**
+     * 根据批次ID查找交易记录
+     * @param batchId 批次ID
+     * @return 交易记录列表
+     */
+    List<InventoryTransaction> findByBatchId(Long batchId);
 }

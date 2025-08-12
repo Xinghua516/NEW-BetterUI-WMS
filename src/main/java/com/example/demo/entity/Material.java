@@ -76,41 +76,20 @@ public class Material {
     @Column(name = "updated_by", nullable = true, length = 50, columnDefinition = "VARCHAR(50)")
     private String updatedBy;
 
-    // 更新时间（自动生成）
+    // 最后更新时间
     @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "last_update_time")
+    private LocalDateTime lastUpdateTime;
     
-    // 当前库存数量
-    @Column(name = "current_stock", nullable = true, columnDefinition = "INT")
-    private Integer currentStock;
-    
-    // 最低库存阈值（低于此值触发预警）
-    @Column(name = "min_stock", nullable = true, columnDefinition = "INT")
-    private Integer minStock;
-    
-    // 默认仓库位置
-    @Column(name = "warehouse", nullable = true, length = 50, columnDefinition = "VARCHAR(50)")
-    private String warehouse;
-    
-    // 物料属性（如材质、类型）
-    @Column(name = "material_property", nullable = true, length = 50, columnDefinition = "VARCHAR(50)")
-    private String materialProperty;
-    
-    // 辅助属性（扩展描述）
-    @Column(name = "auxiliary_property", nullable = true, length = 50, columnDefinition = "VARCHAR(50)")
-    private String auxiliaryProperty;
+    // 临时属性：批次数（不映射到数据库）
+    @Transient
+    private Integer batchCount = 0;
 
-    // 无参构造函数（JPA要求）
-    public Material() {}
-    
-    // 有参构造函数
-    public Material(String materialCode) {
-        this.materialCode = materialCode;
+    // Constructors
+    public Material() {
     }
 
-    // Getter/Setter（完整生成）
-
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -231,14 +210,52 @@ public class Material {
         this.updatedBy = updatedBy;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+    public LocalDateTime getLastUpdateTime() {
+        return lastUpdateTime;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setLastUpdateTime(LocalDateTime lastUpdateTime) {
+        this.lastUpdateTime = lastUpdateTime;
     }
     
+    // 临时属性的getter和setter方法
+    public Integer getBatchCount() {
+        return batchCount;
+    }
+    
+    public void setBatchCount(Integer batchCount) {
+        this.batchCount = batchCount;
+    }
+    
+    // 其他临时属性（用于前端显示）
+    @Transient
+    private String materialProperty; // 物料属性（用于前端显示供应商信息）
+
+    @Transient
+    private String warehouse; // 仓库/分类（用于前端显示分类名称）
+
+    @Transient
+    private Integer currentStock; // 当前库存（用于前端显示库存数量）
+
+    @Transient
+    private Integer minStock; // 最低库存预警值（用于前端显示库存状态）
+
+    public String getMaterialProperty() {
+        return materialProperty;
+    }
+
+    public void setMaterialProperty(String materialProperty) {
+        this.materialProperty = materialProperty;
+    }
+
+    public String getWarehouse() {
+        return warehouse;
+    }
+
+    public void setWarehouse(String warehouse) {
+        this.warehouse = warehouse;
+    }
+
     public Integer getCurrentStock() {
         return currentStock;
     }
@@ -253,29 +270,5 @@ public class Material {
 
     public void setMinStock(Integer minStock) {
         this.minStock = minStock;
-    }
-
-    public String getWarehouse() {
-        return warehouse;
-    }
-
-    public void setWarehouse(String warehouse) {
-        this.warehouse = warehouse;
-    }
-
-    public String getMaterialProperty() {
-        return materialProperty;
-    }
-
-    public void setMaterialProperty(String materialProperty) {
-        this.materialProperty = materialProperty;
-    }
-
-    public String getAuxiliaryProperty() {
-        return auxiliaryProperty;
-    }
-
-    public void setAuxiliaryProperty(String auxiliaryProperty) {
-        this.auxiliaryProperty = auxiliaryProperty;
     }
 }

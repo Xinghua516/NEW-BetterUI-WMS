@@ -204,6 +204,7 @@
                         <th>零件参数</th>
                         <th>零件类型</th>
                         <th>库存数量</th>
+                        <th>批次数</th>
                         <th>库存状态</th>
                         <th>操作</th>
                     </tr>
@@ -219,6 +220,7 @@
                         <td th:text="${item.specification ?: '-'}">零件参数</td>
                         <td th:text="${item.warehouse ?: '-'}">零件类型</td>
                         <td th:text="${item.currentStock ?: '-'}">库存数量</td>
+                        <td th:text="${item.batchCount ?: '0'}">批次数</td>
                         <td>
                             <span th:if="${item.currentStock == null or item.currentStock <= 0}" class="warehouse-status danger">库存为空</span>
                             <span th:if="${item.currentStock != null and item.currentStock > 0 and item.currentStock <= 5}" class="warehouse-status danger">严重不足</span>

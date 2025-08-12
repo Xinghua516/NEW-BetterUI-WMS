@@ -5,11 +5,13 @@ import com.example.demo.entity.InventoryTransaction;
 import com.example.demo.entity.InventoryTransactionType;
 import com.example.demo.entity.Material;
 import com.example.demo.entity.Warehouse;
+import com.example.demo.entity.MaterialBatch;
 import com.example.demo.repository.InventoryRepository;
 import com.example.demo.repository.InventoryTransactionRepository;
 import com.example.demo.repository.MaterialRepository;
 import com.example.demo.repository.WarehouseRepository;
 import com.example.demo.repository.InventoryTransactionTypeRepository;
+import com.example.demo.service.MaterialBatchService;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -50,6 +52,9 @@ public class InventoryController {
     
     @Autowired
     private InventoryRepository inventoryRepository;
+    
+    @Autowired
+    private MaterialBatchService materialBatchService;
 
     @GetMapping("/inventory")
     public String inventory(
@@ -80,7 +85,18 @@ public class InventoryController {
             return criteriaBuilder.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };
 
-        Page<InventoryTransaction> inventoryTransactions = inventoryTransactionRepository.findAll(spec, pageable);
+        // 更新查询，包含批次信息
+        Page<InventoryTransaction> inventoryTransactions = inventoryTransactionRepository.findAll(
+            (root, query, criteriaBuilder) -> {
+                // 添加JOIN FETCH以获取关联的批次信息
+                root.fetch("batch", jakarta.persistence.criteria.JoinType.LEFT);
+                root.fetch("material", jakarta.persistence.criteria.JoinType.LEFT);
+                root.fetch("warehouse", jakarta.persistence.criteria.JoinType.LEFT);
+                root.fetch("transactionType", jakarta.persistence.criteria.JoinType.LEFT);
+                return spec.toPredicate(root, query, criteriaBuilder);
+            }, 
+            pageable
+        );
 
         long totalRecords = inventoryTransactionRepository.count();
         long inRecords = inventoryTransactionRepository.countByTransactionTypeDirection("IN");
@@ -165,6 +181,7 @@ public class InventoryController {
         inventoryTransaction.setTransactionTime(transactionTime);
 
         Material material = null;
+        
         if (materialCode != null && !materialCode.isEmpty()) {
             // 入库情况：根据物料代码查找物料
             material = materialRepository.findByMaterialCode(materialCode).orElse(null);
@@ -185,7 +202,8 @@ public class InventoryController {
         inventoryTransaction.setMaterial(material);
         inventoryTransaction.setQuantity(quantity);
         inventoryTransaction.setNotes(remark);
-
+        
+        // 设置批次信息
         if ("IN".equals(transactionType)) {
             System.out.println("处理入库操作");
             // 入库操作
@@ -194,6 +212,19 @@ public class InventoryController {
                 throw new IllegalArgumentException("仓库信息不存在");
             }
             inventoryTransaction.setWarehouse(targetWarehouse);
+            
+            // 创建新的批次记录
+            MaterialBatch newBatch = new MaterialBatch();
+            newBatch.setBatchNumber(batchNumber != null ? batchNumber : generateTransactionNo(transactionTime));
+            newBatch.setMaterial(material);
+            newBatch.setWarehouse(targetWarehouse);
+            newBatch.setQuantity(quantity);
+            newBatch.setAvailableQuantity(quantity);
+            newBatch.setCreatedBy("System");
+            materialBatchService.save(newBatch);
+            
+            // 关联批次到交易记录
+            inventoryTransaction.setBatch(newBatch);
         } else if ("OUT".equals(transactionType)) {
             System.out.println("处理出库操作: inventoryId=" + inventoryId + ", quantity=" + quantity);
             // 出库操作
@@ -205,6 +236,7 @@ public class InventoryController {
                 throw new IllegalArgumentException("库存不足，当前库存: " + inventory.getQuantity());
             }
             inventoryTransaction.setWarehouse(inventory.getWarehouse());
+            
             // 更新库存数量
             inventory.setQuantity(inventory.getQuantity() - quantity);
             inventoryRepository.save(inventory);
@@ -319,4 +351,37 @@ public class InventoryController {
         
         return result;
     }
+    
+    /*
+    /**
+     * 根据库存ID获取可用批次的API接口
+     */
+    /*
+    @GetMapping("/api/batches")
+    @ResponseBody
+    public List<Map<String, Object>> getAvailableBatches(@RequestParam Long inventoryId) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        
+        Inventory inventory = inventoryRepository.findById(inventoryId).orElse(null);
+        if (inventory != null) {
+            List<MaterialBatch> batches = materialBatchService.findAvailableByMaterialIdAndWarehouseId(
+                inventory.getMaterial().getId(), 
+                inventory.getWarehouse().getId()
+            );
+            
+            for (MaterialBatch batch : batches) {
+                Map<String, Object> batchMap = new HashMap<>();
+                batchMap.put("id", batch.getId());
+                batchMap.put("batchNumber", batch.getBatchNumber());
+                batchMap.put("quantity", batch.getQuantity());
+                batchMap.put("availableQuantity", batch.getAvailableQuantity());
+                batchMap.put("productionDate", batch.getProductionDate());
+                batchMap.put("expiryDate", batch.getExpiryDate());
+                result.add(batchMap);
+            }
+        }
+        
+        return result;
+    }
+    */
 }

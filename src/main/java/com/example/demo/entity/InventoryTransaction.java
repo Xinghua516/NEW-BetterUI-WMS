@@ -50,6 +50,11 @@ public class InventoryTransaction {
     @JoinColumn(name = "transaction_type_id")
     private InventoryTransactionType transactionType;
     
+    // 新增批次关联字段
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "batch_id")
+    private MaterialBatch batch;
+
     // Constructors
     public InventoryTransaction() {}
     
@@ -156,5 +161,13 @@ public class InventoryTransaction {
     
     public void setTransactionType(InventoryTransactionType transactionType) {
         this.transactionType = transactionType;
+    }
+    
+    public MaterialBatch getBatch() {
+        return batch;
+    }
+    
+    public void setBatch(MaterialBatch batch) {
+        this.batch = batch;
     }
 }
