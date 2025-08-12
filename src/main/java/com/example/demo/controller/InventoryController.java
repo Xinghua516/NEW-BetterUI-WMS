@@ -89,16 +89,21 @@ public class InventoryController {
         Page<InventoryTransaction> inventoryTransactions = inventoryTransactionRepository.findAll(
             (root, query, criteriaBuilder) -> {
                 // 添加JOIN FETCH以获取关联的批次信息
-                root.fetch("batch", jakarta.persistence.criteria.JoinType.LEFT);
-                root.fetch("material", jakarta.persistence.criteria.JoinType.LEFT);
-                root.fetch("warehouse", jakarta.persistence.criteria.JoinType.LEFT);
-                root.fetch("transactionType", jakarta.persistence.criteria.JoinType.LEFT);
+                // 修复：在Hibernate 6中正确处理JOIN FETCH和分页查询
+                // 只在非count查询中使用fetch join
+                if (query.getResultType() == null || !query.getResultType().equals(Long.class)) {
+                    query.distinct(true);
+                    root.fetch("batch", jakarta.persistence.criteria.JoinType.LEFT);
+                    root.fetch("material", jakarta.persistence.criteria.JoinType.LEFT);
+                    root.fetch("warehouse", jakarta.persistence.criteria.JoinType.LEFT);
+                    root.fetch("transactionType", jakarta.persistence.criteria.JoinType.LEFT);
+                }
                 return spec.toPredicate(root, query, criteriaBuilder);
             }, 
             pageable
         );
 
-        long totalRecords = inventoryTransactionRepository.count();
+        long totalRecords = inventoryTransactionRepository.count(spec);
         long inRecords = inventoryTransactionRepository.countByTransactionTypeDirection("IN");
         long outRecords = inventoryTransactionRepository.countByTransactionTypeDirection("OUT");
 

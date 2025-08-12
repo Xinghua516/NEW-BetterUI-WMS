@@ -67,30 +67,5 @@
             </ul>
         </div>
     </nav>
-    
-    <script>
-        // 页面加载完成后设置当前页面的导航项为激活状态
-        document.addEventListener('DOMContentLoaded', function() {
-            // 获取当前页面路径
-            var pathname = window.location.pathname;
-            
-            // 如果是根路径，则设置为主面板
-            if (pathname === '/' || pathname === '') {
-                pathname = '/index';
-            }
-            
-            // 查找所有导航链接
-            const navLinks = document.querySelectorAll('.nav-link');
-            
-            // 遍历所有链接，找到匹配当前页面的链接并添加active类
-            navLinks.forEach(link => {
-                if (link.getAttribute('href') === pathname || 
-                    (pathname === '/index' && link.getAttribute('href') === '/') ||
-                    link.getAttribute('data-page') === pathname.substring(1)) {
-                    link.classList.add('active');
-                }
-            });
-        });
-    </script>
 </body>
 </html>

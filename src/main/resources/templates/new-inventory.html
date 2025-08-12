@@ -194,7 +194,7 @@
                                 </div>
                                 
                                 <!-- 批次选择 -->
-  。                                <div class="form-group">
+                                <div class="form-group">
                                     <label for="batchNumberOut">批次号</label>
                                     <input type="text" class="form-control" id="batchNumberOut" name="batchNumber" readonly>
                                 </div>
@@ -455,6 +455,31 @@
                 .catch(error => console.error('Error generating transaction number:', error));
         }
     }
+    
+    // 设置侧边栏激活状态
+    document.addEventListener('DOMContentLoaded', function() {
+        // 获取当前页面路径
+        var pathname = window.location.pathname;
+        
+        // 查找所有导航链接
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        // 遍历所有链接，找到匹配当前页面的链接并添加active类
+        navLinks.forEach(link => {
+            const linkHref = link.getAttribute('href');
+            const dataPage = link.getAttribute('data-page');
+            
+            // 移除可能已存在的active类
+            link.classList.remove('active');
+            
+            // 精确匹配当前页面
+            if ((pathname === '/' && linkHref === '/') || 
+                (pathname !== '/' && linkHref === pathname) ||
+                (dataPage && pathname === '/' + dataPage)) {
+                link.classList.add('active');
+            }
+        });
+    });
 </script>
 </body>
 </html>

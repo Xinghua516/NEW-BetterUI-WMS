@@ -417,6 +417,51 @@
                 document.getElementById('lowStockItems').innerHTML = '<div class="alert alert-warning">获取库存预警信息失败</div>';
             });
     }
+
+    // 更新库存状态显示
+    function updateStockStatus() {
+        document.querySelectorAll('.stock-status').forEach(element => {
+            const stock = parseInt(element.getAttribute('data-stock'));
+            const minStock = parseInt(element.getAttribute('data-min-stock'));
+            element.className = 'stock-status badge';
+            if (stock <= minStock) {
+                element.classList.add('bg-danger');
+                element.textContent = '库存不足';
+            } else if (stock <= minStock * 1.5) {
+                element.classList.add('bg-warning');
+                element.textContent = '库存偏低';
+            } else {
+                element.classList.add('bg-success');
+                element.textContent = '库存充足';
+            }
+        });
+    }
+
+    // 页面加载完成后更新库存状态
+    document.addEventListener('DOMContentLoaded', updateStockStatus);
+    });
+
+    // 设置侧边栏激活状态
+    document.addEventListener('DOMContentLoaded', function() {
+        // 获取当前页面路径
+        const currentPage = window.location.pathname;
+
+        // 获取所有导航链接
+        const navLinks = document.querySelectorAll('.sidebar .nav-link');
+
+        // 移除所有链接的 active 类
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+        });
+
+        // 根据当前页面路径激活对应的导航链接
+        navLinks.forEach(link => {
+            const dataPage = link.getAttribute('data-page');
+            if (currentPage.includes(dataPage)) {
+                link.classList.add('active');
+            }
+        });
+    });
 </script>
 </body>
 </html>

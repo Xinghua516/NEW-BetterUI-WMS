@@ -744,6 +744,33 @@
             if (window.partsChart) window.partsChart.resize();
         });
     });
+
+    // 设置侧边栏激活状态
+    document.addEventListener('DOMContentLoaded', function() {
+        // 获取当前页面路径
+        var pathname = window.location.pathname;
+        
+        // 如果是根路径，则设置为主面板
+        if (pathname === '/' || pathname === '') {
+            pathname = '/';
+        }
+        
+        // 查找所有导航链接
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        // 遍历所有链接，找到匹配当前页面的链接并添加active类
+        navLinks.forEach(link => {
+            const linkHref = link.getAttribute('href');
+            const dataPage = link.getAttribute('data-page');
+            
+            // 检查链接是否匹配当前页面
+            if ((pathname === '/' && linkHref === '/') || 
+                (pathname !== '/' && (linkHref === pathname || 
+                (dataPage && pathname.indexOf(dataPage) !== -1)))) {
+                link.classList.add('active');
+            }
+        });
+    });
 </script>
 </body>
 </html>
