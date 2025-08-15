@@ -1,4 +1,6 @@
--- 禁用外键检查，方便数据插入
+-- 仓库管理系统初始化数据（包含80条物料信息和多次出入库记录）
+
+-- 禁用外键检查，便于初始化
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- 清空现有数据
@@ -7,197 +9,301 @@ TRUNCATE TABLE inventory_alert_settings;
 TRUNCATE TABLE inventory_transactions;
 TRUNCATE TABLE inventory;
 TRUNCATE TABLE materials;
+TRUNCATE TABLE material_batches;
 TRUNCATE TABLE warehouses;
 TRUNCATE TABLE material_categories;
-TRUNCATE TABLE inventory_transaction_types;
+-- 保留出入库类型表的初始化数据，不截断
 
--- 1. 重新插入出入库类型数据
-INSERT INTO inventory_transaction_types (type_code, type_name, direction, description) VALUES
-                                                                                           ('PURCHASE_IN', '采购入库', 'IN', '采购物料入库'),
-                                                                                           ('PRODUCTION_IN', '生产入库', 'IN', '生产成品入库'),
-                                                                                           ('RETURN_IN', '退货入库', 'IN', '客户退货入库'),
-                                                                                           ('TRANSFER_IN', '调拨入库', 'IN', '从其他仓库调拨入库'),
-                                                                                           ('ADJUST_IN', '调整入库', 'IN', '库存调整入库'),
-                                                                                           ('SALES_OUT', '销售出库', 'OUT', '销售订单出库'),
-                                                                                           ('PRODUCTION_OUT', '生产领料', 'OUT', '生产领用出库'),
-                                                                                           ('RETURN_OUT', '退货出库', 'OUT', '向供应商退货出库'),
-                                                                                           ('TRANSFER_OUT', '调拨出库', 'OUT', '调拨到其他仓库出库'),
-                                                                                           ('ADJUST_OUT', '调整出库', 'OUT', '库存调整出库'),
-                                                                                           ('SCRAP_OUT', '报废出库', 'OUT', '物料报废出库');
+-- 1. 物料分类表
+INSERT INTO material_categories (parent_id, category_code, category_name, description, sort_order, status) VALUES
+-- 金属材料类
+(NULL, 'METAL', '金属材料', '工业用各类金属原材料', 1, 'ACTIVE'),
+(1, 'METAL-FERROUS', '黑色金属', '铁、钢等含铁金属材料', 1, 'ACTIVE'),
+(1, 'METAL-NONFERROUS', '有色金属', '铝、铜、锌等非铁金属', 2, 'ACTIVE'),
+(2, 'METAL-STEEL', '钢材', '各类钢材及制品', 1, 'ACTIVE'),
+(2, 'METAL-CASTIRON', '铸铁', '灰铸铁、球墨铸铁等', 2, 'ACTIVE'),
+(3, 'METAL-AL', '铝及铝合金', '纯铝及铝合金材料', 1, 'ACTIVE'),
+(3, 'METAL-CU', '铜及铜合金', '纯铜及铜合金材料', 2, 'ACTIVE'),
+(3, 'METAL-ZN', '锌及锌合金', '纯锌及锌合金材料', 3, 'ACTIVE'),
+-- 电子电气类
+(NULL, 'ELECTRIC', '电子电气', '电气元件及线缆', 2, 'ACTIVE'),
+(9, 'ELEC-COMP', '电子元件', '各类电子元器件', 1, 'ACTIVE'),
+(9, 'ELEC-CABLE', '电线电缆', '各类导线及电缆', 2, 'ACTIVE'),
+(9, 'ELEC-POWER', '电力器件', '接触器、继电器等', 3, 'ACTIVE'),
+(10, 'ELEC-IC', '集成电路', '芯片、单片机等', 1, 'ACTIVE'),
+(10, 'ELEC-SENSOR', '传感器', '各类检测传感器', 2, 'ACTIVE'),
+(10, 'ELEC-CONN', '连接器', '插头、插座等', 3, 'ACTIVE'),
+-- 机械零件类
+(NULL, 'MECHANICAL', '机械零件', '各类机械零部件', 3, 'ACTIVE'),
+(16, 'MECH-STANDARD', '标准件', '螺栓、螺母等标准件', 1, 'ACTIVE'),
+(16, 'MECH-SHAFT', '轴类', '传动轴、主轴等', 2, 'ACTIVE'),
+(16, 'MECH-GEAR', '齿轮类', '齿轮、齿条等', 3, 'ACTIVE'),
+(16, 'MECH-BEARING', '轴承', '各类轴承', 4, 'ACTIVE'),
+(16, 'MECH-FITTING', '连接件', '法兰、接头等', 5, 'ACTIVE'),
+-- 化工及耗材类
+(NULL, 'CHEMICAL', '化工耗材', '化工原料及消耗品', 4, 'ACTIVE'),
+(22, 'CHEM-RAW', '化工原料', '基础化工原料', 1, 'ACTIVE'),
+(22, 'CHEM-ADHESIVE', '胶粘剂', '胶水、密封胶等', 2, 'ACTIVE'),
+(22, 'CHEM-LUBRICANT', '润滑剂', '润滑油、脂等', 3, 'ACTIVE'),
+(22, 'CHEM-CLEANER', '清洗剂', '各类工业清洗剂', 4, 'ACTIVE'),
+-- 工具设备类
+(NULL, 'TOOLING', '工具设备', '生产工具及设备', 5, 'ACTIVE'),
+(27, 'TOOL-CUTTING', '切削工具', '刀具、刀片等', 1, 'ACTIVE'),
+(27, 'TOOL-MEASURE', '测量工具', '量具、仪表等', 2, 'ACTIVE'),
+(27, 'TOOL-POWER', '电动工具', '电钻、砂轮机等', 3, 'ACTIVE'),
+(27, 'TOOL-HAND', '手动工具', '扳手、螺丝刀等', 4, 'ACTIVE');
 
--- 2. 物料分类数据（与之前相同）
-INSERT INTO material_categories (parent_id, category_code, category_name, description, sort_order) VALUES
-                                                                                                       (NULL, 'RAW_MATERIAL', '原材料', '生产所需的原始材料', 1),
-                                                                                                       (NULL, 'SEMI_PRODUCT', '半成品', '未完成最终生产的产品', 2),
-                                                                                                       (NULL, 'FINISHED_PRODUCT', '成品', '可直接销售的最终产品', 3),
-                                                                                                       (NULL, 'PACKAGING', '包装材料', '产品包装用材料', 4),
-                                                                                                       (NULL, 'ACCESSORY', '辅助材料', '生产辅助用材料', 5),
-                                                                                                       (1, 'METAL', '金属材料', '各类金属原材料', 1),
-                                                                                                       (1, 'PLASTIC', '塑料原料', '各类塑料原材料', 2),
-                                                                                                       (1, 'ELECTRONIC', '电子元件', '各类电子元件', 3),
-                                                                                                       (1, 'CHEMICAL', '化工原料', '各类化工原材料', 4),
-                                                                                                       (3, 'ELECTRONICS', '电子产品', '电子类成品', 1),
-                                                                                                       (3, 'MECHANICAL', '机械产品', '机械类成品', 2),
-                                                                                                       (3, 'CONSUMABLE', '消费品', '直接消费的成品', 3);
+-- 2. 仓库信息表
+INSERT INTO warehouses (warehouse_code, warehouse_name, location, contact_person, contact_phone, status, description) VALUES
+                                                                                                                          ('WH-METAL', '金属材料仓库', '厂区A1栋', '张明', '13800138001', 'ACTIVE', '存放各类金属原材料'),
+                                                                                                                          ('WH-ELEC', '电子元件仓库', '厂区A2栋', '李华', '13800138002', 'ACTIVE', '存放电子元件及电气产品'),
+                                                                                                                          ('WH-MECH', '机械零件仓库', '厂区B1栋', '王强', '13800138003', 'ACTIVE', '存放机械零部件及标准件'),
+                                                                                                                          ('WH-CHEM', '化工品仓库', '厂区C1栋', '赵伟', '13800138004', 'ACTIVE', '存放化工原料及耗材(通风防爆)'),
+                                                                                                                          ('WH-TOOL', '工具设备仓库', '厂区D1栋', '刘杰', '13800138005', 'ACTIVE', '存放各类生产工具及设备');
 
--- 3. 仓库数据（与之前相同）
-INSERT INTO warehouses (warehouse_code, warehouse_name, location, contact_person, contact_phone, description) VALUES
-                                                                                                                  ('WH001', '一号主仓库', '厂区A栋1楼', '张三', '13800138001', '主要存放成品和半成品'),
-                                                                                                                  ('WH002', '二号原料仓', '厂区B栋2楼', '李四', '13900139001', '存放各类原材料'),
-                                                                                                                  ('WH003', '三号辅助仓', '厂区C栋1楼', '王五', '13700137001', '存放包装材料和辅助材料'),
-                                                                                                                  ('WH004', '四号临时仓', '厂区D栋3楼', '赵六', '13600136001', '临时存储和周转');
+-- 3. 物料信息表（80条）
+INSERT INTO materials (material_code, material_name, category_id, specification, unit, barcode, brand, supplier, status, default_warehouse_id) VALUES
+-- 金属材料 - 钢材 (category_id=4)
+('MET-001', 'Q235钢板', 4, '2000×1000×5mm', '张', '690010010001', '首钢', '北京钢铁贸易公司', 'ACTIVE', 1),
+('MET-002', 'Q345B钢板', 4, '2500×1250×10mm', '张', '690010010002', '鞍钢', '鞍山钢铁有限公司', 'ACTIVE', 1),
+('MET-003', '45#圆钢', 4, 'φ50×6000mm', '根', '690010010003', '宝钢', '上海金属材料公司', 'ACTIVE', 1),
+('MET-004', '20#无缝钢管', 4, 'φ32×3×6000mm', '根', '690010010004', '天津钢管', '天津无缝钢管厂', 'ACTIVE', 1),
+('MET-005', 'T8碳素工具钢', 4, 'φ20×2000mm', '根', '690010010005', '武钢', '武汉钢铁集团', 'ACTIVE', 1),
+('MET-006', '65Mn弹簧钢', 4, '1.5×1000×2000mm', '张', '690010010006', '本钢', '本溪钢铁集团', 'ACTIVE', 1),
+('MET-007', '304不锈钢板', 4, '2×1220×2440mm', '张', '690010010007', '太钢', '太原钢铁集团', 'ACTIVE', 1),
+('MET-008', '201不锈钢管', 4, 'φ50×2×6000mm', '根', '690010010008', '青山', '青山钢铁集团', 'ACTIVE', 1),
+('MET-009', '40Cr合金结构钢', 4, 'φ80×6000mm', '根', '690010010009', '兴澄', '兴澄特钢', 'ACTIVE', 1),
+('MET-010', 'Q235角钢', 4, '50×50×5mm', '根', '690010010010', '马钢', '马鞍山钢铁', 'ACTIVE', 1),
 
--- 4. 物料数据 (80条，与之前相同)
--- 4.1 金属材料 (10条)
-INSERT INTO materials (material_code, material_name, category_id, specification, unit, barcode, brand, supplier, default_warehouse_id) VALUES
-                                                                                                                                           ('MAT-M-001', '碳钢板', (SELECT id FROM material_categories WHERE category_code='METAL'), '1.2mm*1220mm*2440mm', '张', '6901234560001', '宝钢', '上海钢材供应商', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-M-002', '不锈钢板', (SELECT id FROM material_categories WHERE category_code='METAL'), '1.5mm*1220mm*2440mm', '张', '6901234560002', '太钢', '上海钢材供应商', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-M-003', '铝合金板', (SELECT id FROM material_categories WHERE category_code='METAL'), '2.0mm*1220mm*2440mm', '张', '6901234560003', '西南铝', '广州铝材供应商', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-M-004', '圆钢', (SELECT id FROM material_categories WHERE category_code='METAL'), 'Φ20mm*3000mm', '根', '6901234560004', '宝钢', '北京金属材料公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-M-005', '角钢', (SELECT id FROM material_categories WHERE category_code='METAL'), '50*50*5mm', '根', '6901234560005', '唐钢', '北京金属材料公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-M-006', '铜管', (SELECT id FROM material_categories WHERE category_code='METAL'), 'Φ15mm*1m', '根', '6901234560006', '海亮', '上海铜管厂', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-M-007', '镀锌板', (SELECT id FROM material_categories WHERE category_code='METAL'), '0.8mm*1220mm*2440mm', '张', '6901234560007', '鞍钢', '天津钢材贸易公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-M-008', '铁丝', (SELECT id FROM material_categories WHERE category_code='METAL'), 'Φ2.5mm', '卷', '6901234560008', '首钢', '河北金属制品厂', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-M-009', '钢板网', (SELECT id FROM material_categories WHERE category_code='METAL'), '1m*2m', '张', '6901234560009', '安平县', '河北丝网厂', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-M-010', '钢筋', (SELECT id FROM material_categories WHERE category_code='METAL'), 'Φ12mm*9m', '根', '6901234560010', '武钢', '武汉钢铁贸易公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002'));
+-- 金属材料 - 铸铁 (category_id=5)
+('MET-011', 'HT250灰铸铁', 5, '300×200×50mm', '块', '690010010011', '新兴铸管', '新兴铸管股份公司', 'ACTIVE', 1),
+('MET-012', 'QT450球墨铸铁', 5, 'φ100×500mm', '根', '690010010012', '圣泉集团', '山东圣泉新材料', 'ACTIVE', 1),
+('MET-013', 'HT300灰铸铁', 5, '400×300×80mm', '块', '690010010013', '冀东', '冀东水泥集团', 'ACTIVE', 1),
+('MET-014', 'QT600球墨铸铁', 5, 'φ150×800mm', '根', '690010010014', '天铁', '天津铁厂', 'ACTIVE', 1),
+('MET-015', 'HT150灰铸铁', 5, '200×150×30mm', '块', '690010010015', '唐钢', '唐山钢铁', 'ACTIVE', 1),
 
--- 4.2 塑料原料 (10条)
-INSERT INTO materials (material_code, material_name, category_id, specification, unit, barcode, brand, supplier, default_warehouse_id) VALUES
-                                                                                                                                           ('MAT-P-001', '聚乙烯(PE)', (SELECT id FROM material_categories WHERE category_code='PLASTIC'), '颗粒状', '袋', '6901234560011', '燕山石化', '北京化工原料公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-P-002', '聚丙烯(PP)', (SELECT id FROM material_categories WHERE category_code='PLASTIC'), '颗粒状', '袋', '6901234560012', '扬子石化', '南京化工贸易公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-P-003', '聚氯乙烯(PVC)', (SELECT id FROM material_categories WHERE category_code='PLASTIC'), '颗粒状', '袋', '6901234560013', '齐鲁石化', '山东化工原料厂', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-P-004', 'ABS树脂', (SELECT id FROM material_categories WHERE category_code='PLASTIC'), '颗粒状', '袋', '6901234560014', '奇美', '台湾化学工业公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-P-005', '聚苯乙烯(PS)', (SELECT id FROM material_categories WHERE category_code='PLASTIC'), '颗粒状', '袋', '6901234560015', '上海石化', '上海化工原料公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-P-006', '聚碳酸酯(PC)', (SELECT id FROM material_categories WHERE category_code='PLASTIC'), '颗粒状', '袋', '6901234560016', '拜耳', '德国化工中国分公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-P-007', '尼龙6(PA6)', (SELECT id FROM material_categories WHERE category_code='PLASTIC'), '颗粒状', '袋', '6901234560017', '巴斯夫', '德国化工中国分公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-P-008', '聚甲醛(POM)', (SELECT id FROM material_categories WHERE category_code='PLASTIC'), '颗粒状', '袋', '6901234560018', '杜邦', '美国化工中国分公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-P-009', '聚四氟乙烯(PTFE)', (SELECT id FROM material_categories WHERE category_code='PLASTIC'), '粉末状', '瓶', '6901234560019', '3M', '美国3M中国公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-P-010', '聚氨酯(PU)', (SELECT id FROM material_categories WHERE category_code='PLASTIC'), '液体', '桶', '6901234560020', '亨斯迈', '美国化工中国分公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002'));
+-- 金属材料 - 铝及铝合金 (category_id=6)
+('MET-016', '6061铝合金板', 6, '1220×2440×2mm', '张', '690010010016', '西南铝', '重庆西南铝业', 'ACTIVE', 1),
+('MET-017', '5052铝合金板', 6, '1000×2000×3mm', '张', '690010010017', '东轻', '东北轻合金', 'ACTIVE', 1),
+('MET-018', 'LY12铝合金棒', 6, 'φ50×2000mm', '根', '690010010018', '忠旺', '辽宁忠旺集团', 'ACTIVE', 1),
+('MET-019', '7075铝合金管', 6, 'φ30×2×2000mm', '根', '690010010019', '南山', '南山铝业', 'ACTIVE', 1),
+('MET-020', '1060纯铝板', 6, '1220×2440×1mm', '张', '690010010020', '云铝', '云南铝业', 'ACTIVE', 1),
 
--- 4.3 电子元件 (15条)
-INSERT INTO materials (material_code, material_name, category_id, specification, unit, barcode, brand, supplier, default_warehouse_id) VALUES
-                                                                                                                                           ('MAT-E-001', '电阻', (SELECT id FROM material_categories WHERE category_code='ELECTRONIC'), '1kΩ 0.25W', '个', '6901234560021', 'Yageo', '深圳电子元件公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-E-002', '电容', (SELECT id FROM material_categories WHERE category_code='ELECTRONIC'), '10μF 50V', '个', '6901234560022', 'Murata', '广州电子配件厂', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-E-003', '电感', (SELECT id FROM material_categories WHERE category_code='ELECTRONIC'), '10mH', '个', '6901234560023', 'TDK', '上海电子元件贸易公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-E-004', '二极管', (SELECT id FROM material_categories WHERE category_code='ELECTRONIC'), '1N4007', '个', '6901234560024', 'ON Semiconductor', '北京电子科技公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-E-005', '三极管', (SELECT id FROM material_categories WHERE category_code='ELECTRONIC'), '2N3904', '个', '6901234560025', 'Fairchild', '深圳半导体公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-E-006', '集成电路', (SELECT id FROM material_categories WHERE category_code='ELECTRONIC'), 'LM358', '个', '6901234560026', 'TI', '德州仪器中国分公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-E-007', '微控制器', (SELECT id FROM material_categories WHERE category_code='ELECTRONIC'), 'STM32F103', '个', '6901234560027', 'STMicroelectronics', '意法半导体中国公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-E-008', '传感器', (SELECT id FROM material_categories WHERE category_code='ELECTRONIC'), '温度传感器', '个', '6901234560028', 'Bosch', '博世中国分公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-E-009', '继电器', (SELECT id FROM material_categories WHERE category_code='ELECTRONIC'), '5V 10A', '个', '6901234560029', 'Omron', '欧姆龙中国分公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-E-010', '连接器', (SELECT id FROM material_categories WHERE category_code='ELECTRONIC'), 'USB Type-C', '个', '6901234560030', 'Molex', '莫仕连接器中国公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-E-011', 'LED', (SELECT id FROM material_categories WHERE category_code='ELECTRONIC'), '5mm 红色', '个', '6901234560031', 'Cree', '科锐中国分公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-E-012', '保险丝', (SELECT id FROM material_categories WHERE category_code='ELECTRONIC'), '2A 250V', '个', '6901234560032', 'Littlefuse', '力特电子中国公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-E-013', '晶振', (SELECT id FROM material_categories WHERE category_code='ELECTRONIC'), '16MHz', '个', '6901234560033', 'TXC', '台湾晶技中国公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-E-014', '开关', (SELECT id FROM material_categories WHERE category_code='ELECTRONIC'), '按钮开关', '个', '6901234560034', 'Alps', '阿尔卑斯电子中国公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-E-015', '电池', (SELECT id FROM material_categories WHERE category_code='ELECTRONIC'), 'CR2032 3V', '个', '6901234560035', 'Panasonic', '松下电器中国公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002'));
+-- 金属材料 - 铜及铜合金 (category_id=7)
+('MET-021', 'T2紫铜板', 7, '1000×2000×2mm', '张', '690010010021', '江铜', '江西铜业', 'ACTIVE', 1),
+('MET-022', 'H62黄铜带', 7, '0.3×100mm', '卷', '690010010022', '铜陵', '铜陵有色', 'ACTIVE', 1),
+('MET-023', 'QSn6.5-0.1锡青铜棒', 7, 'φ20×1000mm', '根', '690010010023', '中铝', '中国铝业', 'ACTIVE', 1),
+('MET-024', 'TU1无氧铜管', 7, 'φ10×1×2000mm', '根', '690010010024', '海亮', '海亮股份', 'ACTIVE', 1),
+('MET-025', 'HPb59-1铅黄铜棒', 7, 'φ30×1000mm', '根', '690010010025', '金田', '金田铜业', 'ACTIVE', 1),
 
--- 4.4 化工原料 (10条)
-INSERT INTO materials (material_code, material_name, category_id, specification, unit, barcode, brand, supplier, default_warehouse_id) VALUES
-                                                                                                                                           ('MAT-C-001', '丙酮', (SELECT id FROM material_categories WHERE category_code='CHEMICAL'), '分析纯 500ml', '瓶', '6901234560036', '国药集团', '上海化学试剂厂', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-C-002', '乙醇', (SELECT id FROM material_categories WHERE category_code='CHEMICAL'), '95% 500ml', '瓶', '6901234560037', '国药集团', '北京化学试剂公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-C-003', '盐酸', (SELECT id FROM material_categories WHERE category_code='CHEMICAL'), '36% 500ml', '瓶', '6901234560038', '西陇科学', '广州化学试剂厂', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-C-004', '氢氧化钠', (SELECT id FROM material_categories WHERE category_code='CHEMICAL'), '分析纯 500g', '瓶', '6901234560039', '阿拉丁', '上海阿拉丁生化科技', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-C-005', '甘油', (SELECT id FROM material_categories WHERE category_code='CHEMICAL'), '分析纯 500ml', '瓶', '6901234560040', 'Sigma-Aldrich', '西格玛奥德里奇中国公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-C-006', '油漆', (SELECT id FROM material_categories WHERE category_code='CHEMICAL'), '红色 1L', '桶', '6901234560041', '立邦', '立邦涂料中国公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-C-007', '胶水', (SELECT id FROM material_categories WHERE category_code='CHEMICAL'), '瞬间胶 50ml', '支', '6901234560042', '乐泰', '汉高中国分公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-C-008', '清洗剂', (SELECT id FROM material_categories WHERE category_code='CHEMICAL'), '工业用 5L', '桶', '6901234560043', '3M', '美国3M中国公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-C-009', '润滑油', (SELECT id FROM material_categories WHERE category_code='CHEMICAL'), '机械用 1L', '瓶', '6901234560044', '壳牌', '壳牌中国分公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002')),
-                                                                                                                                           ('MAT-C-010', '树脂', (SELECT id FROM material_categories WHERE category_code='CHEMICAL'), '环氧树脂 1kg', '袋', '6901234560045', '陶氏', '陶氏化学中国分公司', (SELECT id FROM warehouses WHERE warehouse_code='WH002'));
+-- 金属材料 - 锌及锌合金 (category_id=8)
+('MET-026', 'Zn99.995锌锭', 8, '25kg/块', '块', '690010010026', '株冶', '株洲冶炼集团', 'ACTIVE', 1),
+('MET-027', 'ZZnAl4铜锌合金', 8, 'φ50×200mm', '块', '690010010027', '葫芦岛', '葫芦岛锌业', 'ACTIVE', 1),
+('MET-028', '压铸锌合金锭', 8, '20kg/块', '块', '690010010028', '洛铜', '洛阳铜业', 'ACTIVE', 1),
+('MET-029', 'Zn-Al-Mg合金板', 8, '1000×2000×5mm', '张', '690010010029', '白银', '白银有色', 'ACTIVE', 1),
+('MET-030', '锌基耐磨合金', 8, '300×200×50mm', '块', '690010010030', '金川', '金川集团', 'ACTIVE', 1),
 
--- 4.5 电子产品 (15条)
-INSERT INTO materials (material_code, material_name, category_id, specification, unit, barcode, brand, supplier, default_warehouse_id) VALUES
-                                                                                                                                           ('MAT-F-001', '智能手机', (SELECT id FROM material_categories WHERE category_code='ELECTRONICS'), '6.7英寸 256GB', '台', '6901234560046', '华为', '华为技术有限公司', (SELECT id FROM warehouses WHERE warehouse_code='WH001')),
-                                                                                                                                           ('MAT-F-002', '笔记本电脑', (SELECT id FROM material_categories WHERE category_code='ELECTRONICS'), '15.6英寸 i7', '台', '6901234560047', '联想', '联想集团有限公司', (SELECT id FROM warehouses WHERE warehouse_code='WH001')),
-                                                                                                                                           ('MAT-F-003', '平板电脑', (SELECT id FROM material_categories WHERE category_code='ELECTRONICS'), '10.9英寸 128GB', '台', '6901234560048', '苹果', '苹果电脑贸易(上海)有限公司', (SELECT id FROM warehouses WHERE warehouse_code='WH001')),
-                                                                                                                                           ('MAT-F-004', '智能手表', (SELECT id FROM material_categories WHERE category_code='ELECTRONICS'), '运动款', '只', '6901234560049', '小米', '小米科技有限责任公司', (SELECT id FROM warehouses WHERE warehouse_code='WH001')),
-                                                                                                                                           ('MAT-F-005', '蓝牙耳机', (SELECT id FROM material_categories WHERE category_code='ELECTRONICS'), '无线降噪', '副', '6901234560050', '索尼', '索尼(中国)有限公司', (SELECT id FROM warehouses WHERE warehouse_code='WH001')),
-                                                                                                                                           ('MAT-F-006', '移动电源', (SELECT id FROM material_categories WHERE category_code='ELECTRONICS'), '20000mAh', '个', '6901234560051', 'Anker', '安克创新科技股份有限公司', (SELECT id FROM warehouses WHERE warehouse_code='WH001')),
-                                                                                                                                           ('MAT-F-007', '智能音箱', (SELECT id FROM material_categories WHERE category_code='ELECTRONICS'), '语音控制', '台', '6901234560052', '天猫精灵', '阿里巴巴集团', (SELECT id FROM warehouses WHERE warehouse_code='WH001')),
-                                                                                                                                           ('MAT-F-008', '路由器', (SELECT id FROM material_categories WHERE category_code='ELECTRONICS'), '千兆双频', '台', '6901234560053', 'TP-Link', '普联技术有限公司', (SELECT id FROM warehouses WHERE warehouse_code='WH001')),
-                                                                                                                                           ('MAT-F-009', '监控摄像头', (SELECT id FROM material_categories WHERE category_code='ELECTRONICS'), '1080P 夜视', '个', '6901234560054', '海康威视', '杭州海康威视数字技术股份有限公司', (SELECT id FROM warehouses WHERE warehouse_code='WH001')),
-                                                                                                                                           ('MAT-F-010', '打印机', (SELECT id FROM material_categories WHERE category_code='ELECTRONICS'), '彩色喷墨', '台', '6901234560055', '惠普', '惠普(中国)有限公司', (SELECT id FROM warehouses WHERE warehouse_code='WH001')),
-                                                                                                                                           ('MAT-F-011', '键盘', (SELECT id FROM material_categories WHERE category_code='ELECTRONICS'), '机械轴', '个', '6901234560056', '罗技', '罗技(中国)科技有限公司', (SELECT id FROM warehouses WHERE warehouse_code='WH001')),
-                                                                                                                                           ('MAT-F-012', '鼠标', (SELECT id FROM material_categories WHERE category_code='ELECTRONICS'), '无线', '个', '6901234560057', '雷蛇', '雷蛇电脑周边(深圳)有限公司', (SELECT id FROM warehouses WHERE warehouse_code='WH001')),
-                                                                                                                                           ('MAT-F-013', '充电宝', (SELECT id FROM material_categories WHERE category_code='ELECTRONICS'), '10000mAh', '个', '6901234560058', '罗马仕', '深圳罗马仕科技有限公司', (SELECT id FROM warehouses WHERE warehouse_code='WH001')),
-                                                                                                                                           ('MAT-F-014', 'U盘', (SELECT id FROM material_categories WHERE category_code='ELECTRONICS'), '128GB USB3.0', '个', '6901234560059', '金士顿', '金士顿科技(上海)有限公司', (SELECT id FROM warehouses WHERE warehouse_code='WH001')),
-                                                                                                                                           ('MAT-F-015', '存储卡', (SELECT id FROM material_categories WHERE category_code='ELECTRONICS'), '64GB microSD', '个', '6901234560060', '闪迪', '闪迪科技(上海)有限公司', (SELECT id FROM warehouses WHERE warehouse_code='WH001'));
+-- 电子电气 - 集成电路 (category_id=13)
+('ELEC-001', 'STM32F103单片机', 13, 'LQFP48封装', '个', '690010020001', 'ST', '深圳电子元件公司', 'ACTIVE', 2),
+('ELEC-002', 'ATmega328P芯片', 13, 'DIP28封装', '个', '690010020002', 'Microchip', '上海微芯电子', 'ACTIVE', 2),
+('ELEC-003', 'LM358运算放大器', 13, 'DIP8封装', '个', '690010020003', 'TI', '德州仪器中国代理', 'ACTIVE', 2),
+('ELEC-004', 'NE555定时器', 13, 'DIP8封装', '个', '690010020004', 'Fairchild', '飞兆半导体', 'ACTIVE', 2),
+('ELEC-005', '74HC595移位寄存器', 13, 'DIP16封装', '个', '690010020005', 'NXP', '恩智浦半导体', 'ACTIVE', 2),
+('ELEC-006', 'PIC16F877A单片机', 13, 'DIP40封装', '个', '690010020006', 'Microchip', '微芯科技', 'ACTIVE', 2),
+('ELEC-007', 'CD4051多路开关', 13, 'DIP16封装', '个', '690010020007', 'TI', '德州仪器', 'ACTIVE', 2),
+('ELEC-008', 'AD822运算放大器', 13, 'SOIC8封装', '个', '690010020008', 'ADI', '亚德诺半导体', 'ACTIVE', 2),
+('ELEC-009', 'MAX232电平转换', 13, 'DIP16封装', '个', '690010020009', 'Maxim', '美信半导体', 'ACTIVE', 2),
+('ELEC-010', 'IR2104驱动芯片', 13, 'SOIC8封装', '个', '690010020010', 'IR', '国际整流器公司', 'ACTIVE', 2),
 
--- 4.6 包装材料 (10条)
-INSERT INTO materials (material_code, material_name, category_id, specification, unit, barcode, brand, supplier, default_warehouse_id) VALUES
-                                                                                                                                           ('MAT-PK-001', '纸箱', (SELECT id FROM material_categories WHERE category_code='PACKAGING'), '30*20*20cm', '个', '6901234560061', '玖龙', '东莞纸箱厂', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-PK-002', '塑料袋', (SELECT id FROM material_categories WHERE category_code='PACKAGING'), '20*30cm', '个', '6901234560062', '聚乙烯', '深圳塑料制品厂', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-PK-003', '泡沫板', (SELECT id FROM material_categories WHERE category_code='PACKAGING'), '1m*2m*5cm', '张', '6901234560063', 'EPS', '广州泡沫制品公司', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-PK-004', '胶带', (SELECT id FROM material_categories WHERE category_code='PACKAGING'), '48mm*50m', '卷', '6901234560064', '3M', '美国3M中国公司', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-PK-005', '缠绕膜', (SELECT id FROM material_categories WHERE category_code='PACKAGING'), '50cm*100m', '卷', '6901234560065', '拉伸膜', '上海包装材料公司', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-PK-006', '标签', (SELECT id FROM material_categories WHERE category_code='PACKAGING'), '5*8cm', '张', '6901234560066', '不干胶', '北京标签印刷厂', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-PK-007', '打包带', (SELECT id FROM material_categories WHERE category_code='PACKAGING'), '16mm*100m', '卷', '6901234560067', 'PET', '天津包装材料厂', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-PK-008', '气泡膜', (SELECT id FROM material_categories WHERE category_code='PACKAGING'), '50cm*10m', '卷', '6901234560068', '气垫膜', '南京包装制品公司', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-PK-009', '封箱器', (SELECT id FROM material_categories WHERE category_code='PACKAGING'), '手动', '个', '6901234560069', '胶带机', '青岛包装机械厂', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-PK-010', '打包机', (SELECT id FROM material_categories WHERE category_code='PACKAGING'), '半自动', '台', '6901234560070', '包装机', '上海包装机械厂', (SELECT id FROM warehouses WHERE warehouse_code='WH003'));
+-- 电子电气 - 传感器 (category_id=14)
+('ELEC-011', 'DS18B20温度传感器', 14, 'TO-92封装', '个', '690010020011', 'Maxim', '北京Maxim代理', 'ACTIVE', 2),
+('ELEC-012', 'HC-SR04超声波传感器', 14, '模块', '个', '690010020012', 'HC', '深圳电子模块厂', 'ACTIVE', 2),
+('ELEC-013', 'MQ-2烟雾传感器', 14, '模块', '个', '690010020013', 'MQ', '广州传感器公司', 'ACTIVE', 2),
+('ELEC-014', 'MPU6050陀螺仪', 14, '模块', '个', '690010020014', 'InvenSense', '应美盛电子', 'ACTIVE', 2),
+('ELEC-015', 'DHT11温湿度传感器', 14, '模块', '个', '690010020015', 'Aosong', '奥松电子', 'ACTIVE', 2),
+('ELEC-016', 'TCS3200颜色传感器', 14, '模块', '个', '690010020016', 'TAOS', '德州先进光学系统', 'ACTIVE', 2),
+('ELEC-017', 'FC-28土壤湿度传感器', 14, '模块', '个', '690010020017', 'FC', '深圳飞创电子', 'ACTIVE', 2),
+('ELEC-018', 'GP2Y1014AU粉尘传感器', 14, '模块', '个', '690010020018', 'Sharp', '夏普电子', 'ACTIVE', 2),
+('ELEC-019', '霍尔传感器A3144', 14, 'TO-92封装', '个', '690010020019', 'Allegro', '雅丽高半导体', 'ACTIVE', 2),
+('ELEC-020', '光电传感器EE-SX670', 14, '插件', '个', '690010020020', 'Omron', '欧姆龙电子', 'ACTIVE', 2),
 
--- 4.7 辅助材料 (10条)
-INSERT INTO materials (material_code, material_name, category_id, specification, unit, barcode, brand, supplier, default_warehouse_id) VALUES
-                                                                                                                                           ('MAT-A-001', '螺丝刀', (SELECT id FROM material_categories WHERE category_code='ACCESSORY'), '十字 5mm', '把', '6901234560071', '世达', '上海工具公司', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-A-002', '扳手', (SELECT id FROM material_categories WHERE category_code='ACCESSORY'), '10mm', '把', '6901234560072', '得力', '宁波工具厂', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-A-003', '钳子', (SELECT id FROM material_categories WHERE category_code='ACCESSORY'), '尖嘴', '把', '6901234560073', '张小泉', '杭州剪刀厂', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-A-004', '卷尺', (SELECT id FROM material_categories WHERE category_code='ACCESSORY'), '3m', '个', '6901234560074', '钢卷尺', '北京测量工具公司', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-A-005', '手套', (SELECT id FROM material_categories WHERE category_code='ACCESSORY'), '劳保', '双', '6901234560075', '防护手套', '天津劳保用品厂', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-A-006', '口罩', (SELECT id FROM material_categories WHERE category_code='ACCESSORY'), '一次性', '个', '6901234560076', '医用口罩', '广州医疗器械厂', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-A-007', '安全帽', (SELECT id FROM material_categories WHERE category_code='ACCESSORY'), 'ABS材质', '顶', '6901234560077', '安全头盔', '上海安全用品公司', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-A-008', '清洁布', (SELECT id FROM material_categories WHERE category_code='ACCESSORY'), '无尘', '包', '6901234560078', '无尘布', '深圳洁净用品厂', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-A-009', '垃圾袋', (SELECT id FROM material_categories WHERE category_code='ACCESSORY'), '50*60cm', '包', '6901234560079', '黑色垃圾袋', '武汉塑料制品厂', (SELECT id FROM warehouses WHERE warehouse_code='WH003')),
-                                                                                                                                           ('MAT-A-010', '拖把', (SELECT id FROM material_categories WHERE category_code='ACCESSORY'), '平板式', '把', '6901234560080', '清洁工具', '成都日用品公司', (SELECT id FROM warehouses WHERE warehouse_code='WH003'));
+-- 电子电气 - 连接器 (category_id=15)
+('ELEC-021', 'USB Type-C连接器', 15, '母座', '个', '690010020021', 'Foxconn', '富士康', 'ACTIVE', 2),
+('ELEC-022', 'HDMI连接器', 15, '19针', '个', '690010020022', 'Molex', '莫仕连接器', 'ACTIVE', 2),
+('ELEC-023', 'DB9串口连接器', 15, '公头', '个', '690010020023', 'TE', '泰科电子', 'ACTIVE', 2),
+('ELEC-024', 'XH2.54端子', 15, '2P', '个', '690010020024', 'JST', '日本压着端子', 'ACTIVE', 2),
+('ELEC-025', '杜邦线接头', 15, '公头', '个', '690010020025', 'Generic', '通用电子', 'ACTIVE', 2),
 
--- 5. 初始化库存数据（与之前相同）
+-- 机械零件 - 标准件 (category_id=17)
+('MECH-001', 'M8×30螺栓', 17, '8.8级', '个', '690010030001', '标准件厂', '河北标准件集团', 'ACTIVE', 3),
+('MECH-002', 'M10螺母', 17, '8级', '个', '690010030002', '标准件厂', '河北标准件集团', 'ACTIVE', 3),
+('MECH-003', 'φ10垫片', 17, '不锈钢', '个', '690010030003', '标准件厂', '河北标准件集团', 'ACTIVE', 3),
+('MECH-004', 'M12×1.25丝锥', 17, '高速钢', '支', '690010030004', '上工', '上海工具厂', 'ACTIVE', 3),
+('MECH-005', 'M6×16内六角螺丝', 17, '12.9级', '个', '690010030005', '哈量', '哈尔滨量具刃具', 'ACTIVE', 3),
+('MECH-006', 'M5×10十字螺丝', 17, '4.8级', '个', '690010030006', '标准件厂', '河北标准件集团', 'ACTIVE', 3),
+('MECH-007', 'M14六角螺母', 17, '8级', '个', '690010030007', '晋亿', '晋亿实业', 'ACTIVE', 3),
+('MECH-008', 'φ8弹性销', 17, '不锈钢', '个', '690010030008', '标准件厂', '河北标准件集团', 'ACTIVE', 3),
+('MECH-009', 'M16膨胀螺栓', 17, '8.8级', '套', '690010030009', '宁波标准件', '宁波标准件厂', 'ACTIVE', 3),
+('MECH-010', 'M4×8紧定螺丝', 17, '45#钢', '个', '690010030010', '标准件厂', '河北标准件集团', 'ACTIVE', 3),
+
+-- 机械零件 - 轴承 (category_id=20)
+('MECH-011', '6205深沟球轴承', 20, '内径25mm', '套', '690010030011', 'SKF', '斯凯孚中国', 'ACTIVE', 3),
+('MECH-012', '30203圆锥滚子轴承', 20, '内径17mm', '套', '690010030012', 'NSK', '恩斯克中国', 'ACTIVE', 3),
+('MECH-013', '7206角接触球轴承', 20, '内径30mm', '套', '690010030013', 'FAG', '舍弗勒集团', 'ACTIVE', 3),
+('MECH-014', 'NA2205滚针轴承', 20, '内径25mm', '套', '690010030014', 'IKO', '汤姆逊中国', 'ACTIVE', 3),
+('MECH-015', '51106推力球轴承', 20, '内径30mm', '套', '690010030015', 'NTN', '恩梯恩中国', 'ACTIVE', 3),
+
+-- 化工耗材 - 胶粘剂 (category_id=24)
+('CHEM-001', '环氧树脂AB胶', 24, '50ml/套', '套', '690010040001', '得力', '得力化工', 'ACTIVE', 4),
+('CHEM-002', '瞬间胶', 24, '20g/支', '支', '690010040002', '乐泰', '汉高股份', 'ACTIVE', 4),
+('CHEM-003', '硅酮密封胶', 24, '300ml/支', '支', '690010040003', '道康宁', '陶氏化学', 'ACTIVE', 4),
+('CHEM-004', '厌氧胶', 24, '50ml/瓶', '瓶', '690010040004', '回天', '回天新材料', 'ACTIVE', 4),
+('CHEM-005', '热熔胶棒', 24, '11mm×200mm', '支', '690010040005', '3M', '3M中国', 'ACTIVE', 4),
+
+-- 化工耗材 - 润滑剂 (category_id=25)
+('CHEM-006', '锂基润滑脂', 25, '1kg/罐', '罐', '690010040006', '长城', '中国石化', 'ACTIVE', 4),
+('CHEM-007', '机械润滑油', 25, '4L/桶', '桶', '690010040007', '昆仑', '中国石油', 'ACTIVE', 4),
+('CHEM-008', '高温润滑脂', 25, '500g/罐', '罐', '690010040008', '美孚', '埃克森美孚', 'ACTIVE', 4),
+('CHEM-009', '精密仪器润滑油', 25, '100ml/瓶', '瓶', '690010040009', '壳牌', '壳牌中国', 'ACTIVE', 4),
+('CHEM-010', '链条润滑剂', 25, '400ml/喷罐', '罐', '690010040010', 'WD-40', 'WD-40中国', 'ACTIVE', 4),
+
+-- 工具设备 - 切削工具 (category_id=28)
+('TOOL-001', '高速钢立铣刀', 28, 'φ10mm', '支', '690010050001', '上工', '上海工具厂', 'ACTIVE', 5),
+('TOOL-002', '硬质合金车刀', 28, '外圆', '把', '690010050002', '株洲钻石', '株洲硬质合金', 'ACTIVE', 5),
+('TOOL-003', '麻花钻', 28, 'φ8mm', '支', '690010050003', '哈量', '哈尔滨量具刃具', 'ACTIVE', 5),
+('TOOL-004', '丝锥套装', 28, 'M3-M12', '套', '690010050004', '成量', '成都工具研究所', 'ACTIVE', 5),
+('TOOL-005', '合金锯片', 28, '100mm×30T', '片', '690010050005', '金田', '金田锯业', 'ACTIVE', 5),
+
+-- 工具设备 - 测量工具 (category_id=29)
+('TOOL-006', '游标卡尺', 29, '0-150mm', '把', '690010050006', '上量', '上海量具刃具', 'ACTIVE', 5),
+('TOOL-007', '千分尺', 29, '0-25mm', '把', '690010050007', '哈量', '哈尔滨量具刃具', 'ACTIVE', 5),
+('TOOL-008', '百分表', 29, '0-10mm', '个', '690010050008', '成量', '成都工具研究所', 'ACTIVE', 5),
+('TOOL-009', '直角尺', 29, '300mm', '把', '690010050009', '桂量', '桂林量具刃具', 'ACTIVE', 5),
+('TOOL-010', '卷尺', 29, '5m×19mm', '把', '690010050010', '得力', '得力工具', 'ACTIVE', 5),
+
+-- 工具设备 - 电动工具 (category_id=30)
+('TOOL-011', '手电钻', 30, '10mm', '台', '690010050011', '博世', '博世电动工具', 'ACTIVE', 5),
+('TOOL-012', '角磨机', 30, '100mm', '台', '690010050012', '东成', '江苏东成电动工具', 'ACTIVE', 5),
+('TOOL-013', '砂光机', 30, '110mm', '台', '690010050013', '牧田', '牧田中国', 'ACTIVE', 5),
+('TOOL-014', '电烙铁', 30, '60W', '把', '690010050014', 'Weller', '威乐电子', 'ACTIVE', 5),
+('TOOL-015', '热风枪', 30, '2000W', '把', '690010050015', '得伟', '得伟工具', 'ACTIVE', 5);
+
+-- 4. 物料批次表
+INSERT INTO material_batches (batch_number, material_id, warehouse_id, quantity, available_quantity, locked_quantity, production_date, expiry_date, supplier, manufacturer, notes) VALUES
+-- 金属材料批次（1-30）
+('B20230501-001', 1, 1, 50, 50, 0, '2023-05-01', NULL, '北京钢铁贸易公司', '首钢', 'Q235钢板第一批'),
+('B20230502-001', 2, 1, 30, 25, 5, '2023-05-02', NULL, '鞍山钢铁有限公司', '鞍钢', 'Q345B钢板'),
+('B20230503-001', 3, 1, 15, 15, 0, '2023-05-03', NULL, '上海金属材料公司', '宝钢', '45#圆钢（库存偏低）'),
+('B20230504-001', 4, 1, 60, 55, 5, '2023-05-04', NULL, '天津无缝钢管厂', '天津钢管', '20#无缝钢管'),
+('B20230505-001', 5, 1, 40, 38, 2, '2023-05-05', NULL, '武汉钢铁集团', '武钢', 'T8碳素工具钢'),
+('B20230506-001', 6, 1, 25, 25, 0, '2023-05-06', NULL, '本溪钢铁集团', '本钢', '65Mn弹簧钢'),
+('B20230507-001', 7, 1, 35, 35, 0, '2023-05-07', NULL, '太原钢铁集团', '太钢', '304不锈钢板'),
+('B20230508-001', 8, 1, 50, 45, 5, '2023-05-08', NULL, '青山钢铁集团', '青山', '201不锈钢管'),
+('B20230509-001', 9, 1, 20, 20, 0, '2023-05-09', NULL, '兴澄特钢', '兴澄', '40Cr合金结构钢'),
+('B20230510-001', 10, 1, 45, 40, 5, '2023-05-10', NULL, '马鞍山钢铁', '马钢', 'Q235角钢'),
+('B20230511-001', 11, 1, 30, 30, 0, '2023-05-11', NULL, '新兴铸管股份公司', '新兴铸管', 'HT250灰铸铁'),
+('B20230512-001', 12, 1, 25, 25, 0, '2023-05-12', NULL, '山东圣泉新材料', '圣泉集团', 'QT450球墨铸铁'),
+('B20230513-001', 13, 1, 20, 20, 0, '2023-05-13', NULL, '冀东水泥集团', '冀东', 'HT300灰铸铁'),
+('B20230514-001', 14, 1, 15, 15, 0, '2023-05-14', NULL, '天津铁厂', '天铁', 'QT600球墨铸铁（库存偏低）'),
+('B20230515-001', 15, 1, 35, 35, 0, '2023-05-15', NULL, '唐山钢铁', '唐钢', 'HT150灰铸铁'),
+('B20230516-001', 16, 1, 40, 38, 2, '2023-05-16', NULL, '重庆西南铝业', '西南铝', '6061铝合金板'),
+('B20230517-001', 17, 1, 30, 30, 0, '2023-05-17', NULL, '东北轻合金', '东轻', '5052铝合金板'),
+('B20230518-001', 18, 1, 25, 25, 0, '2023-05-18', NULL, '辽宁忠旺集团', '忠旺', 'LY12铝合金棒'),
+('B20230519-001', 19, 1, 20, 20, 0, '2023-05-19', NULL, '南山铝业', '南山', '7075铝合金管'),
+('B20230520-001', 20, 1, 35, 35, 0, '2023-05-20', NULL, '云南铝业', '云铝', '1060纯铝板'),
+('B20230521-001', 21, 1, 30, 30, 0, '2023-05-21', NULL, '江西铜业', '江铜', 'T2紫铜板'),
+('B20230522-001', 22, 1, 40, 38, 2, '2023-05-22', NULL, '铜陵有色', '铜陵', 'H62黄铜带'),
+('B20230523-001', 23, 1, 25, 25, 0, '2023-05-23', NULL, '中国铝业', '中铝', 'QSn6.5-0.1锡青铜棒'),
+('B20230524-001', 24, 1, 20, 20, 0, '2023-05-24', NULL, '海亮股份', '海亮', 'TU1无氧铜管'),
+('B20230525-001', 25, 1, 35, 35, 0, '2023-05-25', NULL, '金田铜业', '金田', 'HPb59-1铅黄铜棒'),
+('B20230526-001', 26, 1, 50, 50, 0, '2023-05-26', NULL, '株洲冶炼集团', '株冶', 'Zn99.995锌锭'),
+('B20230527-001', 27, 1, 30, 30, 0, '2023-05-27', NULL, '葫芦岛锌业', '葫芦岛', 'ZZnAl4铜锌合金'),
+('B20230528-001', 28, 1, 25, 25, 0, '2023-05-28', NULL, '洛阳铜业', '洛铜', '压铸锌合金锭'),
+('B20230529-001', 29, 1, 20, 20, 0, '2023-05-29', NULL, '白银有色', '白银', 'Zn-Al-Mg合金板'),
+('B20230530-001', 30, 1, 15, 15, 0, '2023-05-30', NULL, '金川集团', '金川', '锌基耐磨合金（库存偏低）'),
+
+-- 电子电气批次（31-55）
+('B20230401-001', 31, 2, 200, 180, 20, '2023-04-01', '2026-04-01', '深圳电子元件公司', 'ST', 'STM32F103单片机'),
+('B20230402-001', 32, 2, 25, 25, 0, '2023-04-02', '2026-04-02', '上海微芯电子', 'Microchip', 'ATmega328P芯片（库存偏低）'),
+('B20230403-001', 33, 2, 150, 140, 10, '2023-04-03', '2026-04-03', '德州仪器中国代理', 'TI', 'LM358运算放大器'),
+('B20230404-001', 34, 2, 100, 95, 5, '2023-04-04', '2026-04-04', '飞兆半导体', 'Fairchild', 'NE555定时器'),
+('B20230405-001', 35, 2, 80, 80, 0, '2023-04-05', '2026-04-05', '恩智浦半导体', 'NXP', '74HC595移位寄存器'),
+('B20230406-001', 36, 2, 50, 50, 0, '2023-04-06', '2026-04-06', '微芯科技', 'Microchip', 'PIC16F877A单片机'),
+('B20230407-001', 37, 2, 60, 60, 0, '2023-04-07', '2026-04-07', '德州仪器', 'TI', 'CD4051多路开关'),
+('B20230408-001', 38, 2, 40, 40, 0, '2023-04-08', '2026-04-08', '亚德诺半导体', 'ADI', 'AD822运算放大器'),
+('B20230409-001', 39, 2, 70, 70, 0, '2023-04-09', '2026-04-09', '美信半导体', 'Maxim', 'MAX232电平转换'),
+('B20230410-001', 40, 2, 30, 30, 0, '2023-04-10', '2026-04-10', '国际整流器公司', 'IR', 'IR2104驱动芯片'),
+('B20230411-001', 41, 2, 300, 280, 20, '2023-04-11', '2026-04-11', '北京Maxim代理', 'Maxim', 'DS18B20温度传感器'),
+('B20230412-001', 42, 2, 50, 50, 0, '2023-04-12', '2026-04-12', '深圳电子模块厂', 'HC', 'HC-SR04超声波传感器'),
+('B20230413-001', 43, 2, 40, 40, 0, '2023-04-13', '2026-04-13', '广州传感器公司', 'MQ', 'MQ-2烟雾传感器'),
+('B20230414-001', 44, 2, 30, 30, 0, '2023-04-14', '2026-04-14', '应美盛电子', 'InvenSense', 'MPU6050陀螺仪'),
+('B20230415-001', 45, 2, 60, 60, 0, '2023-04-15', '2026-04-15', '奥松电子', 'Aosong', 'DHT11温湿度传感器'),
+('B20230416-001', 46, 2, 25, 25, 0, '2023-04-16', '2026-04-16', '德州先进光学系统', 'TAOS', 'TCS3200颜色传感器（库存偏低）'),
+('B20230417-001', 47, 2, 40, 40, 0, '2023-04-17', '2026-04-17', '深圳飞创电子', 'FC', 'FC-28土壤湿度传感器'),
+('B20230418-001', 48, 2, 30, 30, 0, '2023-04-18', '2026-04-18', '夏普电子', 'Sharp', 'GP2Y1014AU粉尘传感器'),
+('B20230419-001', 49, 2, 100, 100, 0, '2023-04-19', '2026-04-19', '雅丽高半导体', 'Allegro', '霍尔传感器A3144'),
+('B20230420-001', 50, 2, 50, 50, 0, '2023-04-20', '2026-04-20', '欧姆龙电子', 'Omron', '光电传感器EE-SX670'),
+('B20230421-001', 51, 2, 80, 80, 0, '2023-04-21', '2026-04-21', '富士康', 'Foxconn', 'USB Type-C连接器'),
+('B20230422-001', 52, 2, 40, 40, 0, '2023-04-22', '2026-04-22', '莫仕连接器', 'Molex', 'HDMI连接器'),
+('B20230423-001', 53, 2, 30, 30, 0, '2023-04-23', '2026-04-23', '泰科电子', 'TE', 'DB9串口连接器'),
+('B20230424-001', 54, 2, 200, 190, 10, '2023-04-24', '2026-04-24', '日本压着端子', 'JST', 'XH2.54端子'),
+('B20230425-001', 55, 2, 150, 150, 0, '2023-04-25', '2026-04-25', '通用电子', 'Generic', '杜邦线接头');
+
+-- 5. 初始化库存数据（确保部分物料库存低于预警阈值）
 INSERT INTO inventory (material_id, warehouse_id, quantity, available_quantity, locked_quantity, last_stocktake_time)
 SELECT
     m.id,
     m.default_warehouse_id,
-    -- 随机生成库存数量，大部分在安全范围内，10个左右会低于预警值
+    -- 特意让15种物料库存低于预警值，触发预警
     CASE
-        WHEN m.material_code IN ('MAT-M-003', 'MAT-P-005', 'MAT-E-007', 'MAT-C-002', 'MAT-F-004', 'MAT-PK-006', 'MAT-A-008', 'MAT-E-012', 'MAT-F-009', 'MAT-P-008') THEN FLOOR(RAND() * 10)  -- 低库存物料
-        ELSE FLOOR(RAND() * 100) + 20  -- 正常库存物料
+        WHEN m.id IN (3,14,30,32,46,56,65,70,75,80,85,90,95,100,105) THEN FLOOR(RAND() * 10) + 5  -- 5-14（低于预警值）
+        ELSE FLOOR(RAND() * 100) + 60  -- 60-159（高于预警值）
         END,
-    -- 可用库存 = 总库存 - 随机锁定库存
     CASE
-        WHEN m.material_code IN ('MAT-M-003', 'MAT-P-005', 'MAT-E-007', 'MAT-C-002', 'MAT-F-004', 'MAT-PK-006', 'MAT-A-008', 'MAT-E-012', 'MAT-F-009', 'MAT-P-008') THEN FLOOR(RAND() * 10)
-        ELSE FLOOR(RAND() * 100) + 10
+        WHEN m.id IN (3,14,30,32,46,56,65,70,75,80,85,90,95,100,105) THEN FLOOR(RAND() * 10) + 5
+        ELSE FLOOR(RAND() * 100) + 50
         END,
-    -- 锁定库存
     CASE
-        WHEN m.material_code IN ('MAT-M-003', 'MAT-P-005', 'MAT-E-007', 'MAT-C-002', 'MAT-F-004', 'MAT-PK-006', 'MAT-A-008', 'MAT-E-012', 'MAT-F-009', 'MAT-P-008') THEN 0
+        WHEN m.id IN (3,14,30,32,46,56,65,70,75,80,85,90,95,100,105) THEN 0
         ELSE FLOOR(RAND() * 10) + 5
         END,
-    DATE_SUB(NOW(), INTERVAL FLOOR(RAND() * 30) DAY)  -- 随机生成最近30天内的盘点时间
+    DATE_SUB(NOW(), INTERVAL FLOOR(RAND() * 30) DAY)
 FROM materials m;
 
--- 6. 库存预警设置（与之前相同）
-INSERT INTO inventory_alert_settings (material_id, warehouse_id, min_stock, max_stock, is_enabled)
+-- 6. 库存预警设置
+INSERT INTO inventory_alert_settings (material_id, warehouse_id, min_stock, max_stock, is_enabled, created_at, updated_at)
 SELECT
     m.id,
     m.default_warehouse_id,
-    -- 设置最低库存阈值，金属和塑料类较高，小零件较低
+    -- 设置明确的预警阈值
     CASE
-        WHEN c.category_code IN ('METAL', 'PLASTIC') THEN 50
-        WHEN c.category_code IN ('ELECTRONIC', 'CHEMICAL') THEN 30
-        WHEN c.category_code IN ('ELECTRONICS', 'MECHANICAL') THEN 20
-        WHEN c.category_code IN ('PACKAGING', 'ACCESSORY') THEN 15
+        WHEN c.category_code IN ('METAL', 'METAL-FERROUS', 'METAL-NONFERROUS') THEN 20  -- 金属材料最低库存20
+        WHEN c.category_code IN ('ELECTRIC', 'ELEC-COMP', 'ELEC-CABLE') THEN 30     -- 电子元件最低库存30
+        WHEN c.category_code IN ('MECHANICAL', 'MECH-STANDARD', 'MECH-BEARING') THEN 25  -- 机械零件最低库存25
+        WHEN c.category_code IN ('CHEMICAL', 'CHEM-RAW', 'CHEM-ADHESIVE') THEN 15  -- 化工耗材最低库存15
+        WHEN c.category_code IN ('TOOLING', 'TOOL-CUTTING', 'TOOL-MEASURE') THEN 10  -- 工具设备最低库存10
         ELSE 25
         END,
-    -- 设置最高库存阈值
     CASE
-        WHEN c.category_code IN ('METAL', 'PLASTIC') THEN 200
-        WHEN c.category_code IN ('ELECTRONIC', 'CHEMICAL') THEN 100
-        WHEN c.category_code IN ('ELECTRONICS', 'MECHANICAL') THEN 80
-        WHEN c.category_code IN ('PACKAGING', 'ACCESSORY') THEN 150
+        WHEN c.category_code IN ('METAL', 'METAL-FERROUS', 'METAL-NONFERROUS') THEN 200
+        WHEN c.category_code IN ('ELECTRIC', 'ELEC-COMP', 'ELEC-CABLE') THEN 100
+        WHEN c.category_code IN ('MECHANICAL', 'MECH-STANDARD', 'MECH-BEARING') THEN 80
+        WHEN c.category_code IN ('CHEMICAL', 'CHEM-RAW', 'CHEM-ADHESIVE') THEN 50
+        WHEN c.category_code IN ('TOOLING', 'TOOL-CUTTING', 'TOOL-MEASURE') THEN 30
         ELSE 120
         END,
-    TRUE  -- 启用预警
+    TRUE,
+    NOW(),
+    NOW()
 FROM materials m
-         JOIN material_categories c ON m.category_id = c.id;
+         JOIN material_categories c ON m.category_id = c.id
+WHERE m.default_warehouse_id IS NOT NULL
+ON DUPLICATE KEY UPDATE
+                     min_stock = VALUES(min_stock),
+                     max_stock = VALUES(max_stock),
+                     updated_at = NOW();
 
--- 7. 生成出入库记录（修正语法错误）
+-- 7. 生成库存交易记录的存储过程（支持单一物料多次出入库）
 DELIMITER $$
 CREATE PROCEDURE GenerateInventoryTransactions()
 BEGIN
@@ -205,95 +311,73 @@ BEGIN
     DECLARE mat_id BIGINT;
     DECLARE wh_id BIGINT;
     DECLARE current_qty INT;
+    DECLARE trans_qty INT;
+    DECLARE trans_type INT;
     DECLARE trans_count INT;
     DECLARE i INT;
-    DECLARE trans_type_id BIGINT;
-    DECLARE qty INT;
-    DECLARE trans_date DATETIME;
-    DECLARE direction VARCHAR(10);
-
-    -- 游标遍历所有库存记录
-    DECLARE cur CURSOR FOR
-        SELECT material_id, warehouse_id, quantity FROM inventory;
+    DECLARE cur CURSOR FOR SELECT material_id, warehouse_id FROM inventory;
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
 
     OPEN cur;
-
     read_loop: LOOP
-        FETCH cur INTO mat_id, wh_id, current_qty;
-        IF done THEN
-            LEAVE read_loop;
-        END IF;
+        FETCH cur INTO mat_id, wh_id;
+        IF done THEN LEAVE read_loop; END IF;
 
-        -- 为每个物料生成2-5条出入库记录
-        SET trans_count = FLOOR(RAND() * 4) + 2;
+        -- 为每个物料随机生成1-5条交易记录，确保总记录数多于物料数
+        SET trans_count = FLOOR(RAND() * 5) + 1;
         SET i = 1;
 
-        -- 初始库存
-        SET @initial_qty = 0;
-
         WHILE i <= trans_count DO
-                -- 随机选择交易类型
-                SELECT id, direction INTO trans_type_id, direction
-                FROM inventory_transaction_types
-                ORDER BY RAND()
-                LIMIT 1;
+                -- 获取当前库存数量，确保出库不会导致负库存
+                SELECT quantity INTO current_qty FROM inventory WHERE material_id = mat_id AND warehouse_id = wh_id;
 
-                -- 根据交易方向生成数量
-                IF direction = 'IN' THEN
-                    SET qty = FLOOR(RAND() * 50) + 10;
-                ELSE
-                    -- 出库数量不能超过当前库存
-                    SET qty = -FLOOR(RAND() * LEAST(50, @initial_qty / 2 + 1)) - 5;
-                    -- 确保不出现负库存
-                    IF @initial_qty + qty < 0 THEN
-                        SET qty = -@initial_qty;
-                    END IF;
+                -- 随机生成交易类型（1-11）
+                SET trans_type = FLOOR(RAND() * 11) + 1;
+
+                -- 根据交易类型确定数量，出库交易确保不超过当前库存
+                IF trans_type IN (1,2,3,4) THEN  -- 入库交易（正数）
+                    SET trans_qty = FLOOR(RAND() * 50) + 10;
+                    -- 更新库存
+                    UPDATE inventory
+                    SET quantity = quantity + trans_qty,
+                        available_quantity = available_quantity + trans_qty,
+                        last_stocktake_time = NOW()
+                    WHERE material_id = mat_id AND warehouse_id = wh_id;
+                ELSE  -- 出库交易（负数），确保不会导致负库存
+                    SET trans_qty = -LEAST(FLOOR(RAND() * 30) + 5, current_qty);
+                    -- 更新库存
+                    UPDATE inventory
+                    SET quantity = quantity + trans_qty,
+                        available_quantity = available_quantity + trans_qty,
+                        last_stocktake_time = NOW()
+                    WHERE material_id = mat_id AND warehouse_id = wh_id;
                 END IF;
-
-                -- 修正：将天数转换为小时后再加上随机小时数，避免语法错误
-                SET trans_date = DATE_SUB(NOW(), INTERVAL (FLOOR(RAND() * 90) * 24 + FLOOR(RAND() * 24)) HOUR);
-
-                -- 生成唯一交易单号
-                SET @trans_no = CONCAT('TR', DATE_FORMAT(trans_date, '%Y%m%d'),
-                                       FLOOR(RAND() * 1000000));
-
-                -- 获取物料代码
-                SELECT material_code INTO @mat_code FROM materials WHERE id = mat_id;
 
                 -- 插入交易记录
                 INSERT INTO inventory_transactions (
-                    transaction_no, transaction_type_id, material_id, warehouse_id,
-                    quantity, unit_cost, total_cost, reference_no, transaction_time,
-                    notes, created_by
+                    transaction_no, transaction_type_id, material_id, warehouse_id, quantity, transaction_time, created_by
                 ) VALUES (
-                             @trans_no, trans_type_id, mat_id, wh_id, qty,
-                             FLOOR(RAND() * 100) + 10, -- 随机单位成本
-                             FLOOR(RAND() * 100) + 10 * ABS(qty), -- 总成本
-                             CONCAT('REF', FLOOR(RAND() * 100000)), -- 参考单号
-                             trans_date,
-                             CONCAT('Auto-generated transaction for ', @mat_code), -- 备注
-                             'system' -- 创建人
+                             CONCAT('TR', UNIX_TIMESTAMP(), '_', mat_id, '_', wh_id, '_', i),
+                             trans_type,
+                             mat_id,
+                             wh_id,
+                             trans_qty,
+                             DATE_SUB(NOW(), INTERVAL FLOOR(RAND() * 30) DAY),  -- 随机过去30天内的日期
+                             'system'
                          );
-
-                -- 更新初始库存
-                SET @initial_qty = @initial_qty + qty;
 
                 SET i = i + 1;
             END WHILE;
     END LOOP;
-
     CLOSE cur;
 END$$
 DELIMITER ;
 
--- 调用存储过程生成出入库记录
+-- 执行存储过程生成交易记录（预计生成 80 * 3 = 240 条左右记录）
 CALL GenerateInventoryTransactions();
-
--- 删除存储过程
 DROP PROCEDURE IF EXISTS GenerateInventoryTransactions;
 
--- 8. 手动触发库存预警
+-- 8. 手动触发库存预警检查
 INSERT INTO inventory_alerts (material_id, warehouse_id, alert_type, current_quantity, threshold_value)
 SELECT
     i.material_id,
@@ -303,14 +387,30 @@ SELECT
     s.min_stock
 FROM inventory i
          JOIN inventory_alert_settings s ON i.material_id = s.material_id
-    AND (i.warehouse_id = s.warehouse_id OR s.warehouse_id IS NULL)
+    AND i.warehouse_id = s.warehouse_id
 WHERE i.quantity <= s.min_stock
 ON DUPLICATE KEY UPDATE
                      current_quantity = i.quantity,
-                     threshold_value = s.min_stock;
+                     threshold_value = s.min_stock,
+                     is_processed = FALSE;
 
 -- 恢复外键检查
 SET FOREIGN_KEY_CHECKS = 1;
 
--- 显示生成的预警数量
-SELECT COUNT(*) AS low_stock_alert_count FROM inventory_alerts WHERE alert_type = 'LOW_STOCK';
+-- 显示统计信息
+SELECT COUNT(*) AS total_materials FROM materials;
+SELECT COUNT(*) AS total_transactions FROM inventory_transactions;
+SELECT COUNT(*) AS low_stock_alert_count FROM inventory_alerts WHERE alert_type = 'LOW_STOCK' AND is_processed = FALSE;
+
+-- 查看特定物料的多次出入库记录
+SELECT
+    m.material_code,
+    m.material_name,
+    t.transaction_no,
+    t.transaction_type_id,
+    t.quantity,
+    t.transaction_time
+FROM inventory_transactions t
+         JOIN materials m ON t.material_id = m.id
+WHERE m.material_id = 1  -- 查看第一个物料的所有交易记录
+ORDER BY t.transaction_time;

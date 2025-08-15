@@ -315,6 +315,25 @@ public class OpenAIChatClient implements ChatClient {
             StringBuilder sb = new StringBuilder();
             for (String line : lines) {
                 String trimmedLine = line.trim();
+                // 检查是否包含中文解释性文字
+                if (trimmedLine.contains("是合适的") ||
+                    trimmedLine.contains("接下来") ||
+                    trimmedLine.contains("确认") ||
+                    trimmedLine.contains("语法是否正确") ||
+                    trimmedLine.contains("会更合适") ||
+                    trimmedLine.contains("考虑到性能") ||
+                    trimmedLine.contains("最好还是") ||
+                    trimmedLine.contains("需要注意的是") ||
+                    trimmedLine.contains("根据问题描述") ||
+                    trimmedLine.contains("SELECT语句") ||
+                    trimmedLine.contains("确保包含正确的WHERE子句") ||
+                    trimmedLine.contains("检查生成的SQL语句") ||
+                    trimmedLine.contains("符合所有要求") ||
+                    trimmedLine.contains("确认无误后就可以输出结果")) {
+                    // 跳过包含解释性文字的行
+                    continue;
+                }
+                
                 if (trimmedLine.startsWith("select") || 
                     trimmedLine.startsWith("insert") || 
                     trimmedLine.startsWith("update") || 
@@ -331,6 +350,64 @@ public class OpenAIChatClient implements ChatClient {
             }
             if (sb.length() > 0) {
                 cleaned = sb.toString();
+            } else {
+                // 如果没有找到有效的SQL语句，尝试查找最后一行有效的SQL
+                for (int i = lines.length - 1; i >= 0; i--) {
+                    String trimmedLine = lines[i].trim().toLowerCase();
+                    if (trimmedLine.startsWith("select") || 
+                        trimmedLine.startsWith("insert") || 
+                        trimmedLine.startsWith("update") || 
+                        trimmedLine.startsWith("delete")) {
+                        cleaned = lines[i].trim();
+                        if (!cleaned.endsWith(";")) {
+                            cleaned += ";";
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // 最后确保返回的是一条有效的SQL语句
+        String finalLowerCase = cleaned.toLowerCase().trim();
+        if (!(finalLowerCase.startsWith("select") || 
+              finalLowerCase.startsWith("insert") || 
+              finalLowerCase.startsWith("update") || 
+              finalLowerCase.startsWith("delete"))) {
+            // 如果仍然不是有效的SQL语句，尝试从中提取
+            
+            int validStart = -1;
+            String keyword = "";
+            if (selectIndex >= 0) {
+                validStart = selectIndex;
+                keyword = "select";
+            }
+            if (insertIndex >= 0 && (validStart == -1 || insertIndex < validStart)) {
+                validStart = insertIndex;
+                keyword = "insert";
+            }
+            if (updateIndex >= 0 && (validStart == -1 || updateIndex < validStart)) {
+                validStart = updateIndex;
+                keyword = "update";
+            }
+            if (deleteIndex >= 0 && (validStart == -1 || deleteIndex < validStart)) {
+                validStart = deleteIndex;
+                keyword = "delete";
+            }
+            
+            if (validStart >= 0) {
+                // 提取从关键字开始到分号结束的部分
+                int newStartIndex = finalLowerCase.indexOf(keyword);
+                int endIndex = cleaned.indexOf(";", newStartIndex);
+                if (endIndex > newStartIndex) {
+                    cleaned = cleaned.substring(newStartIndex, endIndex + 1);
+                } else {
+                    // 如果没有找到分号，就提取到行尾
+                    cleaned = cleaned.substring(newStartIndex);
+                    if (!cleaned.endsWith(";")) {
+                        cleaned += ";";
+                    }
+                }
             }
         }
         

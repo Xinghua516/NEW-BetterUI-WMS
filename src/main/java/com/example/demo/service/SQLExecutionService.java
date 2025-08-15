@@ -7,6 +7,8 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.SQLSyntaxErrorException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +27,6 @@ public class SQLExecutionService {
      * @return 查询结果
      */
     public Map<String, Object> executeQuery(String sql) {
-        Map<String, Object> result = new HashMap<>();
         List<Map<String, Object>> rows = new ArrayList<>();
         List<String> columns = new ArrayList<>();
 
@@ -59,20 +60,22 @@ public class SQLExecutionService {
                     rows.add(row);
                 }
             }
-
-            result.put("columns", columns);
-            result.put("rows", rows);
-            result.put("rowCount", rows.size());
-            result.put("success", true);
-            result.put("message", "查询执行成功");
-
+        } catch (SQLSyntaxErrorException e) {
+            // 捕获表不存在等语法错误并提供更友好的错误信息
+            String message = e.getMessage();
+            if (message.contains("doesn't exist")) {
+                throw new RuntimeException("数据库表不存在，请检查SQL语句中的表名是否正确。原始错误: " + message, e);
+            }
+            throw new RuntimeException("SQL语法错误: " + e.getMessage(), e);
         } catch (Exception e) {
-            result.put("success", false);
-            result.put("message", "执行SQL时发生错误: " + e.getMessage());
-            result.put("executedSql", sql); // 添加执行的SQL语句到结果中，便于调试
-            e.printStackTrace();
+            throw new RuntimeException("执行SQL时发生错误: " + e.getMessage(), e);
         }
 
+        // 构建结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("columns", columns);
+        result.put("rows", rows);
         return result;
     }
 
@@ -100,6 +103,17 @@ public class SQLExecutionService {
             result.put("success", true);
             result.put("message", "操作执行成功，影响行数: " + affectedRows);
 
+        } catch (SQLSyntaxErrorException e) {
+            // 捕获表不存在等语法错误并提供更友好的错误信息
+            String message = e.getMessage();
+            if (message.contains("doesn't exist")) {
+                result.put("success", false);
+                result.put("message", "数据库表不存在，请检查SQL语句中的表名是否正确。原始错误: " + message);
+            } else {
+                result.put("success", false);
+                result.put("message", "SQL语法错误: " + e.getMessage());
+            }
+            result.put("executedSql", sql);
         } catch (Exception e) {
             result.put("success", false);
             result.put("message", "执行SQL时发生错误: " + e.getMessage());

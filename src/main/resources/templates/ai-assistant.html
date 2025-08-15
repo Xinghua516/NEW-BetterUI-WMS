@@ -404,6 +404,46 @@
         .sql-result-table tr:nth-child(even) {
             background-color: #f8f9fa;
         }
+
+        /* 深度思考内容组件样式 */
+        .deep-thought {
+            background-color: #e9f7fe;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .deep-thought-header {
+            background-color: #d1ecf1;
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            color: #0c5460;
+        }
+
+        .deep-thought-content {
+            padding: 15px;
+            display: none;
+            white-space: pre-wrap;
+            font-family: monospace;
+            background-color: #f8fdff;
+        }
+
+        .deep-thought.open .deep-thought-content {
+            display: block;
+        }
+
+        .deep-thought-toggle {
+            background: none;
+            border: none;
+            color: #0c5460;
+            cursor: pointer;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -545,7 +585,52 @@
             const aiMessageElement = document.createElement('div');
             aiMessageElement.className = 'message ai-message';
 
-            if (response.data.success) {
+            // 检查是否是普通对话响应（非SQL执行结果）
+            if (!response.data.success && response.data.message) {
+                // 处理普通对话响应中的深度思考内容
+                let messageContent = response.data.message;
+                let deepThoughtContent = '';
+                
+                // 提取深度思考内容（第一个\n到第一个\n\n\n之间的内容）
+                const firstNewLine = messageContent.indexOf('\n');
+                const firstTripleNewLine = messageContent.indexOf('\n\n\n');
+                
+                if (firstNewLine !== -1 && firstTripleNewLine !== -1 && firstTripleNewLine > firstNewLine) {
+                    // 提取深度思考内容
+                    deepThoughtContent = messageContent.substring(firstNewLine + 1, firstTripleNewLine);
+                    // 移除深度思考内容，保留实际回复
+                    messageContent = messageContent.substring(firstTripleNewLine + 3);
+                }
+                
+                // 构建AI响应内容
+                let content = '';
+                
+                // 如果有深度思考内容，添加深度思考组件
+                if (deepThoughtContent.trim()) {
+                    content += `
+                        <div class="deep-thought">
+                            <div class="deep-thought-header">
+                                <span>深度思考过程</span>
+                                <button class="deep-thought-toggle" onclick="toggleDeepThought(this)">展开</button>
+                            </div>
+                            <div class="deep-thought-content">${deepThoughtContent}</div>
+                        </div>
+                    `;
+                }
+                
+                // 添加实际回复内容
+                content += `<div class="ai-response">${messageContent}</div>`;
+                
+                aiMessageElement.innerHTML = `
+                    <div class="ai-avatar">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <div class="ai-content">
+                        <div class="ai-message-header">仓库管理AI助手</div>
+                        ${content}
+                    </div>
+                `;
+            } else if (response.data.success) {
                 // 显示成功结果
                 let content = '';
 
@@ -642,6 +727,18 @@
         }
     }
 
+    // 切换深度思考内容显示状态
+    function toggleDeepThought(button) {
+        const deepThought = button.closest('.deep-thought');
+        deepThought.classList.toggle('open');
+
+        if (deepThought.classList.contains('open')) {
+            button.textContent = '收起';
+        } else {
+            button.textContent = '展开';
+        }
+    }
+
     // 绑定发送按钮点击事件（完全保留）
     document.getElementById('sendBtn').addEventListener('click', sendMessage);
 
@@ -691,17 +788,6 @@
     // 页面加载时初始化配置（完全保留）
     window.addEventListener('DOMContentLoaded', initSettings);
 
-    function toggleDeepThought(button) {
-        const deepThought = button.closest('.deep-thought');
-        deepThought.classList.toggle('open');
-
-        if (deepThought.classList.contains('open')) {
-            button.textContent = '收起';
-        } else {
-            button.textContent = '展开';
-        }
-    }
-    
     // 设置侧边栏激活状态
     document.addEventListener('DOMContentLoaded', function() {
         // 获取当前页面路径

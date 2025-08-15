@@ -104,15 +104,21 @@ public class AIAssistantController {
     public ResponseEntity<Map<String, Object>> executeSql(@RequestBody Map<String, String> request) {
         try {
             String sql = request.get("sql");
+            String originalQuery = request.get("originalQuery"); // 获取原始查询语句
             
             // 验证SQL
             ValidationResult validation = validateSQL(sql);
             if (!validation.isValid()) {
-                return createErrorResult(validation.getErrorMessage());
+                // 检查是否为查询所有库存的特殊情况
+                if (isQueryAllInventory(originalQuery)) {
+                    sql = getQueryAllInventorySQL();
+                } else {
+                    return createErrorResult(validation.getErrorMessage());
+                }
             }
             
             // 执行SQL
-            Map<String, Object> result = executeSQLBasedOnType(sql);
+            Map<String, Object> result = executeSQLBasedOnType(sql, originalQuery);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return createErrorResult("SQL执行失败: " + e.getMessage());
@@ -154,11 +160,16 @@ public class AIAssistantController {
             // 验证生成的SQL
             ValidationResult sqlValidation = validateGeneratedSQL(sql);
             if (!sqlValidation.isValid()) {
-                return createErrorResult(sqlValidation.getErrorMessage());
+                // 检查是否为查询所有库存的特殊情况
+                if (isQueryAllInventory(naturalLanguageQuery)) {
+                    sql = getQueryAllInventorySQL();
+                } else {
+                    return createErrorResult(sqlValidation.getErrorMessage());
+                }
             }
             
             // 执行SQL
-            Map<String, Object> result = executeSQLBasedOnType(sql);
+            Map<String, Object> result = executeSQLBasedOnType(sql, naturalLanguageQuery);
             
             // 检查执行结果
             if (!(Boolean) result.get("success")) {
@@ -300,7 +311,16 @@ public class AIAssistantController {
     }
     
     // 辅助方法：根据SQL类型执行不同的方法
-    private Map<String, Object> executeSQLBasedOnType(String sql) throws Exception {
+    private Map<String, Object> executeSQLBasedOnType(String sql, String originalQuery) throws Exception {
+        // 检查是否需要使用预定义的SQL查询
+        if (isQueryAllInventory(originalQuery) && 
+            (sql == null || sql.trim().isEmpty() || 
+             sql.contains("无法生成有效的SQL语句") || 
+             sql.contains("生成SQL语句时发生错误"))) {
+            // 使用预定义的查询所有库存的SQL
+            sql = getQueryAllInventorySQL();
+        }
+        
         String trimmedSql = sql.trim().toLowerCase();
         Map<String, Object> result;
         
@@ -344,6 +364,47 @@ public class AIAssistantController {
         }
         
         return result;
+    }
+    
+    // 新增方法：检查是否为查询所有库存的请求
+    private boolean isQueryAllInventory(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return false;
+        }
+        
+        // 转换为小写进行比较
+        String lowerQuery = query.toLowerCase();
+        
+        // 定义触发查询所有库存的关键词组合
+        String[] inventoryKeywords = {"库存"};
+        String[] allKeywords = {"所有", "全部", "所以", "所有"};
+        
+        boolean hasInventoryKeyword = false;
+        boolean hasAllKeyword = false;
+        
+        // 检查是否包含库存关键词
+        for (String keyword : inventoryKeywords) {
+            if (lowerQuery.contains(keyword.toLowerCase())) {
+                hasInventoryKeyword = true;
+                break;
+            }
+        }
+        
+        // 检查是否包含所有/全部关键词
+        for (String keyword : allKeywords) {
+            if (lowerQuery.contains(keyword.toLowerCase())) {
+                hasAllKeyword = true;
+                break;
+            }
+        }
+        
+        // 如果同时包含库存和所有/全部关键词，则认为是查询所有库存
+        return hasInventoryKeyword && hasAllKeyword;
+    }
+    
+    // 新增方法：获取查询所有库存的预定义SQL
+    private String getQueryAllInventorySQL() {
+        return "SELECT * FROM materials";
     }
     
     // 内部类：验证结果

@@ -15,73 +15,86 @@ public class AISQLService {
                 "数据库表结构如下：\n" +
                 "1. materials: 物料主数据表\n" +
                 "   - id: 主键\n" +
-                "   - material_code: 物料代码\n" +
+                "   - material_code: 物料编码\n" +
                 "   - material_name: 物料名称\n" +
+                "   - category_id: 物料分类ID\n" +
                 "   - specification: 规格型号\n" +
-                "   - material_property: 物料属性\n" +
-                "   - auxiliary_property: 辅助属性\n" +
-                "   - unit: 单位\n" +
-                "   - status: 使用状态\n" +
-                "   - warehouse: 默认仓库\n" +
-                "   - created_at: 创建时间\n" +
-                "   - updated_at: 更新时间\n\n" +
-                "2. bom_headers: BOM清单头表\n" +
-                "   - id: 主键\n" +
-                "   - bom_group: BOM单组别\n" +
-                "   - bom_code: BOM单编号\n" +
+                "   - unit: 计量单位\n" +
+                "   - barcode: 条形码\n" +
+                "   - brand: 品牌\n" +
+                "   - supplier: 供应商\n" +
                 "   - status: 状态\n" +
-                "   - material_code: 物料代码\n" +
-                "   - material_name: 物料名称\n" +
-                "   - specification: 规格\n" +
-                "   - unit: 单位\n" +
-                "   - quantity: 数量\n" +
-                "   - cost: 费用\n" +
-                "   - remark: 备注\n" +
-                "   - material_property: 物料属性\n" +
-                "   - auxiliary_property: 辅助属性\n" +
-                "   - creator: 建立人员\n" +
-                "   - created_date: 建立日期\n" +
-                "   - auditor: 审核人员\n" +
-                "   - audit_date: 审核日期\n" +
-                "   - last_updater: 最后更新人员\n" +
-                "   - last_update_date: 最后更新日期\n" +
+                "   - default_warehouse_id: 默认仓库ID\n" +
+                "   - description: 物料描述\n" +
+                "   - created_by: 创建人\n" +
                 "   - created_at: 创建时间\n" +
+                "   - updated_by: 更新人\n" +
                 "   - updated_at: 更新时间\n\n" +
-                "3. bom_items: BOM清单明细表\n" +
+                "2. warehouses: 仓库信息表\n" +
                 "   - id: 主键\n" +
-                "   - bom_header_id: BOM头ID\n" +
-                "   - seq_no: 顺序号\n" +
-                "   - material_id: 物料ID\n" +
-                "   - quantity: 用量\n" +
-                "   - loss_rate: 损耗率(%)\n" +
-                "   - status: 使用状态\n" +
-                "   - warehouse: 发料仓库\n" +
-                "   - min_stock: 最低库存\n" +
-                "   - remark: 备注\n" +
+                "   - warehouse_code: 仓库编码\n" +
+                "   - warehouse_name: 仓库名称\n" +
+                "   - location: 仓库位置\n" +
+                "   - contact_person: 联系人\n" +
+                "   - contact_phone: 联系电话\n" +
+                "   - status: 状态\n" +
+                "   - description: 仓库描述\n" +
+                "   - created_by: 创建人\n" +
                 "   - created_at: 创建时间\n" +
+                "   - updated_by: 更新人\n" +
                 "   - updated_at: 更新时间\n\n" +
-                "4. inventory_records: 库存记录表\n" +
+                "3. inventory: 库存表\n" +
                 "   - id: 主键\n" +
-                "   - type: 记录类型(IN/OUT)\n" +
                 "   - material_id: 物料ID\n" +
-                "   - material_code: 物料代码\n" +
-                "   - material_name: 物料名称\n" +
-                "   - specification: 规格\n" +
+                "   - warehouse_id: 仓库ID\n" +
+                "   - quantity: 当前库存数量\n" +
+                "   - available_quantity: 可用库存数量\n" +
+                "   - locked_quantity: 锁定库存数量\n" +
+                "   - last_stocktake_time: 最后盘点时间\n" +
+                "   - last_update_time: 最后更新时间\n\n" +
+                "4. inventory_transactions: 出入库记录表\n" +
+                "   - id: 主键\n" +
+                "   - transaction_no: 交易单号\n" +
+                "   - transaction_type_id: 交易类型ID\n" +
+                "   - material_id: 物料ID\n" +
+                "   - warehouse_id: 仓库ID\n" +
+                "   - batch_id: 批次ID\n" +
                 "   - quantity: 数量\n" +
-                "   - warehouse: 仓库\n" +
-                "   - operator: 操作人\n" +
-                "   - time: 时间\n" +
+                "   - unit_cost: 单位成本\n" +
+                "   - total_cost: 总成本\n" +
+                "   - reference_no: 参考单号\n" +
+                "   - transaction_time: 交易时间\n" +
+                "   - notes: 备注\n" +
+                "   - created_by: 操作人\n" +
                 "   - created_at: 创建时间\n\n" +
-                "5. low_stock_items: 低库存项目表\n" +
+                "5. material_batches: 物料批次表\n" +
+                "   - id: 主键\n" +
+                "   - batch_number: 批次号\n" +
+                "   - material_id: 物料ID\n" +
+                "   - warehouse_id: 仓库ID\n" +
+                "   - quantity: 当前批次库存数量\n" +
+                "   - available_quantity: 可用批次库存数量\n" +
+                "   - locked_quantity: 锁定批次库存数量\n" +
+                "   - production_date: 生产日期\n" +
+                "   - expiry_date: 过期日期\n" +
+                "   - supplier: 供应商\n" +
+                "   - manufacturer: 制造商\n" +
+                "   - notes: 备注\n" +
+                "   - is_active: 是否激活\n" +
+                "   - created_by: 创建人\n" +
+                "   - created_at: 创建时间\n" +
+                "   - updated_by: 更新人\n" +
+                "   - updated_at: 更新时间\n\n" +
+                "6. inventory_alerts: 库存预警表\n" +
                 "   - id: 主键\n" +
                 "   - material_id: 物料ID\n" +
-                "   - material_code: 零件编号\n" +
-                "   - material_name: 零件名称\n" +
-                "   - specification: 规格\n" +
-                "   - current_stock: 当前库存\n" +
-                "   - min_stock: 最低库存\n" +
-                "   - warehouse: 仓库\n" +
-                "   - status: 状态\n" +
+                "   - warehouse_id: 仓库ID\n" +
+                "   - alert_type: 预警类型\n" +
+                "   - current_quantity: 当前库存数量\n" +
+                "   - threshold_value: 阈值\n" +
+                "   - is_processed: 是否已处理\n" +
+                "   - processed_by: 处理人\n" +
+                "   - processed_time: 处理时间\n" +
                 "   - created_at: 创建时间\n" +
                 "   - updated_at: 更新时间\n\n" +
                 "输出要求：\n" +
@@ -96,8 +109,9 @@ public class AISQLService {
                 "9. 不要在SQL语句后面添加任何解释性文字\n" +
                 "10. 只返回一条SQL语句，不要返回多条\n" +
                 "11. 不要包含任何中文说明或解释性文本\n" +
-                "12. 不要包含'需要注意的是'、'根据问题描述'等解释性语句\n" +
-                "13. 严格遵守以上规则\n\n" +
+                "12. 不要包含'需要注意的是'、'根据问题描述'、'是合适的'、'接下来'、'确认'等解释性语句\n" +
+                "13. 严格遵守以上规则，只返回纯净的SQL语句\n" +
+                "14. 绝对不能在SQL语句中包含任何分析、解释或说明性的文字\n\n" +
                 "示例输出（SQL）：\n" +
                 "SELECT * FROM materials;\n\n" +
                 "示例输出（对话）：\n" +
