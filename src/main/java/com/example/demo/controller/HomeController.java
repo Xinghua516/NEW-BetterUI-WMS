@@ -1,19 +1,10 @@
 package com.example.demo.controller;
 
-import com.example.demo.entity.InventoryAlert;
-import com.example.demo.entity.InventoryAlertDTO;
-import com.example.demo.entity.InventoryTransaction;
-import com.example.demo.entity.InventoryTransactionDTO;
-import com.example.demo.entity.Material;
-import com.example.demo.entity.MaterialCategory;
-import com.example.demo.entity.Warehouse;
-
-import com.example.demo.repository.InventoryAlertRepository;
-import com.example.demo.repository.InventoryTransactionRepository;
-import com.example.demo.repository.MaterialRepository;
-import com.example.demo.repository.MaterialCategoryRepository;
-import com.example.demo.repository.WarehouseRepository;
+import com.example.demo.entity.*;
+import com.example.demo.repository.*;
 import com.example.demo.service.WeatherService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,22 +23,27 @@ import java.util.stream.Collectors;
 
 @Controller
 public class HomeController {
+    
+    private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
 
     @Autowired
     private InventoryTransactionRepository inventoryTransactionRepository;
-    
+
     @Autowired
     private InventoryAlertRepository inventoryAlertRepository;
 
     @Autowired
     private MaterialRepository materialRepository;
-    
+
     @Autowired
     private MaterialCategoryRepository materialCategoryRepository;
-    
+
     @Autowired
     private WarehouseRepository warehouseRepository;
     
+    @Autowired
+    private InventoryRepository inventoryRepository;
+
     @Autowired
     private WeatherService weatherService;
     
@@ -203,49 +199,37 @@ public class HomeController {
      */
     private Map<String, Integer> calculateSpaceUsage() {
         Map<String, Integer> spaceUsage = new HashMap<>();
-
+        
         try {
+            // 获取所有仓库的库存记录
+            List<Inventory> inventories = inventoryRepository.findAll();
+            
+            // 计算总的已用空间（所有库存数量之和）
+            int totalUsedSpace = inventories.stream()
+                .mapToInt(Inventory::getQuantity)
+                .sum();
+            
             // 获取所有仓库
             List<Warehouse> warehouses = warehouseRepository.findAll();
             
-            // 获取所有物料
-            List<Material> materials = materialRepository.findAll();
+            // 假设每个仓库有最大容量（可以根据实际需求调整）
+            int maxCapacityPerWarehouse = 2000;
             
-            // 按仓库统计物料数量
-            Map<Long, Long> warehouseMaterialCount = materials.stream()
-                .filter(m -> m.getDefaultWarehouseId() != null)
-                .collect(Collectors.groupingBy(Material::getDefaultWarehouseId, Collectors.counting()));
+            // 计算总容量
+            int totalCapacity = warehouses.size() * maxCapacityPerWarehouse;
             
-            // 每个仓库的总存储空间
-            int totalSpacePerWarehouse = 1500;
-            
-            // 计算总的已用空间和可用空间
-            int totalUsedSpace = 0;
-            int totalAvailableSpace = 0;
-            
-            // 计算各仓库的使用情况
-            for (Warehouse warehouse : warehouses) {
-                Long warehouseId = warehouse.getId();
-                
-                // 获取该仓库的物料数量
-                Long materialCount = warehouseMaterialCount.getOrDefault(warehouseId, 0L);
-                
-                // 计算使用空间（基于物料数量）
-                int usedSpace = Math.min(materialCount.intValue(), totalSpacePerWarehouse);
-                totalUsedSpace += usedSpace;
-            }
-            
-            // 计算总可用空间
-            totalAvailableSpace = warehouses.size() * totalSpacePerWarehouse - totalUsedSpace;
+            // 计算可用空间
+            int totalAvailableSpace = Math.max(0, totalCapacity - totalUsedSpace);
             
             // 添加到结果中
             spaceUsage.put("usedSpace", totalUsedSpace);
             spaceUsage.put("availableSpace", totalAvailableSpace);
             
         } catch (Exception e) {
-            // 如果计算过程中出现异常，返回默认值
+            // 如果计算过程中出现异常，记录日志并返回默认值
+            logger.error("计算库存空间使用情况时发生错误: ", e);
             spaceUsage.put("usedSpace", 0);
-            spaceUsage.put("availableSpace", 1500);
+            spaceUsage.put("availableSpace", 2000);
         }
 
         return spaceUsage;

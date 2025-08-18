@@ -24,6 +24,9 @@ import java.util.stream.Collectors;
 @RequestMapping("/")
 public class AIAssistantController {
     private static final Logger logger = LoggerFactory.getLogger(AIAssistantController.class);
+    
+    // 查询所有库存的预定义SQL语句
+    private static final String QUERY_ALL_INVENTORY_SQL = "SELECT * FROM materials";
 
     @GetMapping("/ai-assistant")
     public String aiAssistant() {
@@ -111,7 +114,7 @@ public class AIAssistantController {
             if (!validation.isValid()) {
                 // 检查是否为查询所有库存的特殊情况
                 if (isQueryAllInventory(originalQuery)) {
-                    sql = getQueryAllInventorySQL();
+                    sql = QUERY_ALL_INVENTORY_SQL;
                 } else {
                     return createErrorResult(validation.getErrorMessage());
                 }
@@ -162,7 +165,7 @@ public class AIAssistantController {
             if (!sqlValidation.isValid()) {
                 // 检查是否为查询所有库存的特殊情况
                 if (isQueryAllInventory(naturalLanguageQuery)) {
-                    sql = getQueryAllInventorySQL();
+                    sql = QUERY_ALL_INVENTORY_SQL;
                 } else {
                     return createErrorResult(sqlValidation.getErrorMessage());
                 }
@@ -210,15 +213,6 @@ public class AIAssistantController {
         }
         
         return false;
-    }
-
-    // 新增方法：获取备注名称
-    private List<String> getCommentColumns(List<String> columns) {
-        // 这里可以根据实际情况实现获取备注名称的逻辑
-        // 示例：直接返回原列名（实际应替换为真实的备注名称）
-        return columns.stream()
-                .map(column -> "备注_" + column) // 示例：简单地在前面加上"备注_"
-                .collect(Collectors.toList());
     }
 
     /**
@@ -283,31 +277,45 @@ public class AIAssistantController {
     
     // 辅助方法：验证输入
     private ValidationResult validateInput(String input) {
-        if (input == null || input.trim().isEmpty()) {
-            return new ValidationResult(false, "查询语句不能为空");
-        }
-        return ValidationResult.VALID;
+        return validateInputGeneric(input);
     }
     
     // 辅助方法：验证SQL
     private ValidationResult validateSQL(String sql) {
-        if (sql == null || sql.trim().isEmpty()) {
-            return new ValidationResult(false, "SQL语句不能为空");
-        }
-        return ValidationResult.VALID;
+        return validateSQLGeneric(sql);
     }
     
     // 辅助方法：验证生成的SQL
     private ValidationResult validateGeneratedSQL(String sql) {
-        if (sql == null || sql.trim().isEmpty()) {
-            return new ValidationResult(false, "AI无法生成有效的SQL语句");
+        return validateGeneratedSQLGeneric(sql);
+    }
+    
+    // 通用验证方法
+    private ValidationResult validate(String value, String emptyMessage, String invalidMessage) {
+        if (value == null || value.trim().isEmpty()) {
+            return new ValidationResult(false, emptyMessage);
         }
         
-        if (sql.contains("无法生成有效的SQL语句") || sql.contains("生成SQL语句时发生错误")) {
-            return new ValidationResult(false, "AI无法生成有效的SQL语句: " + sql);
+        if ((value.contains("无法生成有效的SQL语句") || value.contains("生成SQL语句时发生错误")) && invalidMessage != null) {
+            return new ValidationResult(false, invalidMessage + ": " + value);
         }
         
         return ValidationResult.VALID;
+    }
+    
+    // 辅助方法：验证输入（使用通用方法）
+    private ValidationResult validateInputGeneric(String input) {
+        return validate(input, "查询语句不能为空", null);
+    }
+    
+    // 辅助方法：验证SQL（使用通用方法）
+    private ValidationResult validateSQLGeneric(String sql) {
+        return validate(sql, "SQL语句不能为空", null);
+    }
+    
+    // 辅助方法：验证生成的SQL（使用通用方法）
+    private ValidationResult validateGeneratedSQLGeneric(String sql) {
+        return validate(sql, "AI无法生成有效的SQL语句", "AI无法生成有效的SQL语句");
     }
     
     // 辅助方法：根据SQL类型执行不同的方法
@@ -318,7 +326,7 @@ public class AIAssistantController {
              sql.contains("无法生成有效的SQL语句") || 
              sql.contains("生成SQL语句时发生错误"))) {
             // 使用预定义的查询所有库存的SQL
-            sql = getQueryAllInventorySQL();
+            sql = QUERY_ALL_INVENTORY_SQL;
         }
         
         String trimmedSql = sql.trim().toLowerCase();
@@ -332,8 +340,10 @@ public class AIAssistantController {
                 List<String> columns = (List<String>) result.get("columns");
                 List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get("rows");
 
-                // 获取备注名称
-                List<String> commentColumns = getCommentColumns(columns);
+                // 获取备注名称（内联原getCommentColumns方法）
+                List<String> commentColumns = columns.stream()
+                        .map(column -> "备注_" + column)
+                        .collect(Collectors.toList());
 
                 result.put("columns", commentColumns);
 
@@ -400,11 +410,6 @@ public class AIAssistantController {
         
         // 如果同时包含库存和所有/全部关键词，则认为是查询所有库存
         return hasInventoryKeyword && hasAllKeyword;
-    }
-    
-    // 新增方法：获取查询所有库存的预定义SQL
-    private String getQueryAllInventorySQL() {
-        return "SELECT * FROM materials";
     }
     
     // 内部类：验证结果

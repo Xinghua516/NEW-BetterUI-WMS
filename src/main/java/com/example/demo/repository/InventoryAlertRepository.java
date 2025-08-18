@@ -22,18 +22,28 @@ public interface InventoryAlertRepository extends JpaRepository<InventoryAlert, 
                         "ORDER BY ia.createdAt DESC";
     
     /**
+     * 获取指定数量的最近库存预警记录，按创建时间倒序排列
+     * @param limit 返回记录数量限制
+     * @return 最近的库存预警记录
+     */
+    @Query(value = BASE_QUERY)
+    List<InventoryAlert> findTopByOrderByCreatedAtDesc(int limit);
+    
+    /**
      * 获取最近的3条库存预警记录，按创建时间倒序排列
      * @return 最近的3条库存预警记录
      */
-    @Query(value = BASE_QUERY)
-    List<InventoryAlert> findTop3ByOrderByCreatedAtDesc();
+    default List<InventoryAlert> findTop3ByOrderByCreatedAtDesc() {
+        return findTopByOrderByCreatedAtDesc(3);
+    }
     
     /**
      * 获取最近的4条库存预警记录，按创建时间倒序排列
      * @return 最近的4条库存预警记录
      */
-    @Query(value = BASE_QUERY)
-    List<InventoryAlert> findTop4ByOrderByCreatedAtDesc();
+    default List<InventoryAlert> findTop4ByOrderByCreatedAtDesc() {
+        return findTopByOrderByCreatedAtDesc(4);
+    }
     
     /**
      * 分页获取库存预警记录，按创建时间倒序排列

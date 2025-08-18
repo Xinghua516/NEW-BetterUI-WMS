@@ -13,6 +13,8 @@ import com.example.demo.repository.WarehouseRepository;
 import com.example.demo.repository.InventoryTransactionTypeRepository;
 import com.example.demo.service.MaterialBatchService;
 import jakarta.persistence.criteria.Predicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,21 +40,23 @@ import java.util.UUID;
 @Controller
 public class InventoryController {
 
-    @Autowired
-    private InventoryTransactionRepository inventoryTransactionRepository;
-    
-    @Autowired
-    private MaterialRepository materialRepository;
-    
-    @Autowired
-    private WarehouseRepository warehouseRepository;
-    
-    @Autowired
-    private InventoryTransactionTypeRepository inventoryTransactionTypeRepository;
-    
+    private static final Logger logger = LoggerFactory.getLogger(InventoryController.class);
+
     @Autowired
     private InventoryRepository inventoryRepository;
-    
+
+    @Autowired
+    private MaterialRepository materialRepository;
+
+    @Autowired
+    private WarehouseRepository warehouseRepository;
+
+    @Autowired
+    private InventoryTransactionRepository inventoryTransactionRepository;
+
+    @Autowired
+    private InventoryTransactionTypeRepository inventoryTransactionTypeRepository;
+
     @Autowired
     private MaterialBatchService materialBatchService;
 
@@ -159,7 +163,7 @@ public class InventoryController {
             Model model) {
 
     try {
-        System.out.println("保存库存交易记录: transactionType=" + transactionType + ", inventoryId=" + inventoryId + ", quantity=" + quantity);
+        logger.debug("保存库存交易记录: transactionType=" + transactionType + ", inventoryId=" + inventoryId + ", quantity=" + quantity);
         
         InventoryTransaction inventoryTransaction = new InventoryTransaction();
         
@@ -168,8 +172,8 @@ public class InventoryController {
         
         // 生成批次号（transactionNo）
         String transactionNo = generateTransactionNo(transactionTime);
+        logger.debug("生成的批次号: " + transactionNo);
         inventoryTransaction.setTransactionNo(transactionNo);
-        System.out.println("生成的批次号: " + transactionNo);
         
         // 根据ID获取具体的交易类型
         if (transactionTypeId != null) {
@@ -190,13 +194,13 @@ public class InventoryController {
         if (materialCode != null && !materialCode.isEmpty()) {
             // 入库情况：根据物料代码查找物料
             material = materialRepository.findByMaterialCode(materialCode).orElse(null);
-            System.out.println("入库物料: materialCode=" + materialCode);
+            logger.debug("入库物料: materialCode=" + materialCode);
         } else if (inventoryId != null) {
             // 出库情况：根据库存ID查找物料
             Inventory inventory = inventoryRepository.findById(inventoryId).orElse(null);
             if (inventory != null) {
                 material = inventory.getMaterial();
-                System.out.println("出库物料: inventoryId=" + inventoryId);
+                logger.debug("出库物料: inventoryId=" + inventoryId);
             }
         }
 
@@ -210,7 +214,7 @@ public class InventoryController {
         
         // 设置批次信息
         if ("IN".equals(transactionType)) {
-            System.out.println("处理入库操作");
+            logger.debug("处理入库操作");
             // 入库操作
             Warehouse targetWarehouse = warehouseRepository.findByWarehouseName(warehouse).orElse(null);
             if (targetWarehouse == null) {
@@ -231,7 +235,7 @@ public class InventoryController {
             // 关联批次到交易记录
             inventoryTransaction.setBatch(newBatch);
         } else if ("OUT".equals(transactionType)) {
-            System.out.println("处理出库操作: inventoryId=" + inventoryId + ", quantity=" + quantity);
+            logger.debug("处理出库操作: inventoryId=" + inventoryId + ", quantity=" + quantity);
             // 出库操作
             Inventory inventory = inventoryRepository.findById(inventoryId).orElse(null);
             if (inventory == null) {
@@ -245,16 +249,15 @@ public class InventoryController {
             // 更新库存数量
             inventory.setQuantity(inventory.getQuantity() - quantity);
             inventoryRepository.save(inventory);
-            System.out.println("更新库存数量: 原数量=" + (inventory.getQuantity() + quantity) + ", 新数量=" + inventory.getQuantity());
+            logger.debug("更新库存数量: 原数量=" + (inventory.getQuantity() + quantity) + ", 新数量=" + inventory.getQuantity());
         }
 
         inventoryTransactionRepository.save(inventoryTransaction);
-        System.out.println("库存交易记录保存成功");
+        logger.debug("库存交易记录保存成功");
 
         return "redirect:/inventory";
     } catch (Exception e) {
-        System.err.println("保存库存交易记录失败: " + e.getMessage());
-        e.printStackTrace();
+        logger.error("保存库存交易记录时发生错误: ", e);
         
         // 获取库存列表和交易类型列表，以便在出错时重新显示表单
         List<Inventory> inventories = inventoryRepository.findAll();

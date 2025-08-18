@@ -1,5 +1,7 @@
 package com.example.demo.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -9,6 +11,7 @@ import java.util.Map;
 
 @Service
 public class WeatherService {
+    private static final Logger logger = LoggerFactory.getLogger(WeatherService.class);
     
     @Value("${weather.api.key}")
     private String apiKey;
@@ -33,7 +36,7 @@ public class WeatherService {
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
 
             // 调试信息输出
-            System.out.println("天气API响应结构: " + response);
+            logger.debug("天气API响应结构: " + response);
             
             // 解析API响应
             if (response != null && response.containsKey("results")) {
@@ -56,14 +59,14 @@ public class WeatherService {
                 weatherInfo.put("uv", "--"); // API响应中未包含UV数据
             } else {
                 // API响应异常时的默认值
-                System.out.println("API响应结构不符合预期或results为空");
+                logger.warn("API响应结构不符合预期或results为空");
                 setDefaultWeatherInfo(weatherInfo);
             }
             
         } catch (Exception e) {
             // 记录异常信息并返回默认值
             // 使用DEBUG级别记录详细错误信息
-            System.out.println("天气API调用失败: " + e.getMessage());
+            logger.error("天气API调用失败: ", e);
             setDefaultWeatherInfo(weatherInfo);
         }
         

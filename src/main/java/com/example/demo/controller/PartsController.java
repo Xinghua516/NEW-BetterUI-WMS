@@ -2,6 +2,8 @@ package com.example.demo.controller;
 
 import com.example.demo.entity.*;
 import com.example.demo.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -45,6 +47,11 @@ public class PartsController {
     @Autowired
     private InventoryRepository inventoryRepository;
     
+    @Autowired
+    private MaterialBatchRepository materialBatchRepository;
+    
+    private static final Logger logger = LoggerFactory.getLogger(PartsController.class);
+
     @GetMapping("/parts")
     public String parts(Model model) {
         // 获取BOM清单头信息
@@ -82,7 +89,7 @@ public class PartsController {
             model.addAttribute("querySuccess", true);
         } catch (Exception e) {
             // 添加错误处理
-            e.printStackTrace();
+            logger.error("数据库查询出现错误：", e);
             model.addAttribute("error", "数据库查询出现错误：" + e.getMessage());
             model.addAttribute("lowStockItems", new ArrayList<InventoryAlert>()); // 添加空列表避免模板出错
             model.addAttribute("querySuccess", false);
@@ -106,55 +113,34 @@ public class PartsController {
     }
 
     @GetMapping("/material/{id}")
-    public String materialDetail(@PathVariable Long id, Model model) {
-        // 获取零件详细信息
-        Optional<Material> materialOptional = materialRepository.findById(id);
-        if (materialOptional.isPresent()) {
-            Material material = materialOptional.get();
-            model.addAttribute("material", material);
-
-            // 获取该零件的出入库记录
-            Pageable pageable = PageRequest.of(0, 10); // 默认分页参数
-            Page<InventoryTransaction> inventoryTransactions = inventoryTransactionRepository.findByItemCode(material.getMaterialCode(), pageable);
-            // 确保即使没有记录也传递一个空列表而不是null
-            model.addAttribute("inventoryTransactions", inventoryTransactions != null ? inventoryTransactions.getContent() : new ArrayList<>());
-
-            // 新增：获取所属分类名称
-            if (material.getCategoryId() != null) {
-                Optional<MaterialCategory> categoryOptional = materialCategoryRepository.findById(material.getCategoryId());
-                if (categoryOptional.isPresent()) {
-                    model.addAttribute("categoryName", categoryOptional.get().getCategoryName());
-                } else {
-                    model.addAttribute("categoryName", "-");
-                }
+    public String getMaterialDetails(@PathVariable Long id, Model model) {
+        try {
+            Optional<Material> materialOpt = materialRepository.findById(id);
+            if (materialOpt.isPresent()) {
+                Material material = materialOpt.get();
+                model.addAttribute("material", material);
+                
+                // 获取库存信息
+                Optional<Inventory> inventoryOpt = inventoryRepository.findByMaterialId(id);
+                List<Inventory> inventoryList = inventoryOpt.map(List::of).orElse(List.of());
+                model.addAttribute("inventoryList", inventoryList);
+                
+                // 获取交易记录
+                Pageable pageable = PageRequest.of(0, 10);
+                // 修复：使用正确的方法名
+                Page<InventoryTransaction> transactionPage = inventoryTransactionRepository.findByItemCode(material.getMaterialCode(), pageable);
+                model.addAttribute("transactionPage", transactionPage);
+                
+                // 获取批次信息
+                List<MaterialBatch> batchList = materialBatchRepository.findByMaterialId(id);
+                model.addAttribute("batchList", batchList);
             } else {
-                model.addAttribute("categoryName", "-");
+                model.addAttribute("error", "物料不存在");
             }
-            
-            // 新增：获取默认仓库名称
-            if (material.getDefaultWarehouseId() != null) {
-                Optional<Warehouse> warehouseOptional = warehouseRepository.findById(material.getDefaultWarehouseId());
-                if (warehouseOptional.isPresent()) {
-                    model.addAttribute("defaultWarehouseName", warehouseOptional.get().getWarehouseName());
-                } else {
-                    model.addAttribute("defaultWarehouseName", "-");
-                }
-            } else {
-                model.addAttribute("defaultWarehouseName", "-");
-            }
-            
-            // 新增：获取当前库存数量
-            Optional<Inventory> inventoryOptional = inventoryRepository.findByMaterialId(material.getId());
-            if (inventoryOptional.isPresent()) {
-                model.addAttribute("currentStock", inventoryOptional.get().getQuantity());
-            } else {
-                model.addAttribute("currentStock", 0);
-            }
-        } else {
-            // 处理零件不存在的情况
-            return "redirect:/parts-query"; // 重定向到零件查询页面
+        } catch (Exception e) {
+            logger.error("获取物料详情时发生错误: ", e);
+            model.addAttribute("error", "获取物料详情失败: " + e.getMessage());
         }
-
         return "material-detail";
     }
     

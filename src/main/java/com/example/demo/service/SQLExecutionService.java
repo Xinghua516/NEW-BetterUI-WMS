@@ -1,5 +1,7 @@
 package com.example.demo.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,8 @@ import java.util.Map;
 @Service
 public class SQLExecutionService {
 
+    private static final Logger logger = LoggerFactory.getLogger(SQLExecutionService.class);
+
     @Autowired
     private DataSource dataSource;
 
@@ -34,7 +38,7 @@ public class SQLExecutionService {
              Statement statement = connection.createStatement()) {
              
             // 记录实际执行的SQL语句，便于调试
-            System.out.println("执行SQL查询: " + sql);
+            logger.debug("执行SQL查询: " + sql);
             
             // 验证SQL语句是否有效
             String trimmedSql = sql.trim();
@@ -91,7 +95,7 @@ public class SQLExecutionService {
              Statement statement = connection.createStatement()) {
              
             // 记录实际执行的SQL语句，便于调试
-            System.out.println("执行SQL更新: " + sql);
+            logger.debug("执行SQL更新: " + sql);
             
             // 验证SQL语句是否有效
             String trimmedSql = sql.trim();
@@ -118,7 +122,7 @@ public class SQLExecutionService {
             result.put("success", false);
             result.put("message", "执行SQL时发生错误: " + e.getMessage());
             result.put("executedSql", sql); // 添加执行的SQL语句到结果中，便于调试
-            e.printStackTrace();
+            logger.error("执行SQL时发生错误: ", e);
         }
 
         return result;
