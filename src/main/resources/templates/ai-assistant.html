@@ -12,6 +12,43 @@
             background-color: #f8f9fa;
         }
 
+        /* 语音按钮样式 */
+        .voice-control {
+            position: absolute;
+            right: 80px;
+            top: 20px;
+            z-index: 1000;
+        }
+
+        .voice-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .voice-btn.listening {
+            background-color: #dc3545;
+            animation: pulse 1.5s infinite;
+        }
+
+        .voice-btn.speaking {
+            background-color: #28a745;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
         /* 设置按钮样式 */
         .settings-btn {
             position: absolute;
@@ -477,7 +514,11 @@
                     <button id="sendBtn" class="btn btn-primary btn-send ms-2">
                         <i class="bi bi-paper-plane"></i> 发送
                     </button>
+                    <button id="voiceBtn" class="btn btn-outline-secondary ms-2" title="语音输入">
+                        <i class="bi bi-mic"></i>
+                    </button>
                 </div>
+
             </div>
         </div>
     </main>
@@ -750,6 +791,250 @@
         }
     });
 
+    // 语音识别和合成相关代码
+    let recognition;
+    let isListening = false;
+    let isSpeaking = false;
+    let utterance = null;
+
+    // 初始化语音功能
+    function initVoiceFeatures() {
+        // 初始化语音识别
+        initSpeechRecognition();
+        
+        // 绑定语音按钮事件
+        const voiceBtn = document.getElementById('voiceBtn');
+        if (voiceBtn) {
+            voiceBtn.addEventListener('click', toggleListening);
+        }
+    }
+
+    // 初始化语音识别
+    function initSpeechRecognition() {
+        try {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                console.warn('浏览器不支持语音识别API');
+                const voiceBtn = document.getElementById('voiceBtn');
+                if (voiceBtn) {
+                    voiceBtn.style.display = 'none';
+                }
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = 'zh-CN';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = function() {
+                isListening = true;
+                const voiceBtn = document.getElementById('voiceBtn');
+                if (voiceBtn) {
+                    voiceBtn.classList.add('listening');
+                    voiceBtn.title = '正在聆听...';
+                }
+                console.log('语音识别已启动');
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('userInput').value = transcript;
+                console.log('识别结果:', transcript);
+            };
+
+            recognition.onerror = function(event) {
+                console.error('语音识别错误:', event.error);
+                stopListening();
+                alert('语音识别出错: ' + event.error);
+            };
+
+            recognition.onend = function() {
+                stopListening();
+            };
+
+        } catch (e) {
+            console.error('初始化语音识别失败:', e);
+            const voiceBtn = document.getElementById('voiceBtn');
+            if (voiceBtn) {
+                voiceBtn.style.display = 'none';
+            }
+        }
+    }
+
+    // 切换语音监听状态
+    function toggleListening() {
+        if (isListening) {
+            stopListening();
+        } else {
+            startListening();
+        }
+    }
+
+    // 开始语音监听
+    function startListening() {
+        if (recognition && !isListening) {
+            try {
+                recognition.start();
+            } catch (e) {
+                console.error('启动语音识别失败:', e);
+            }
+        }
+    }
+
+    // 停止语音监听
+    function stopListening() {
+        if (recognition && isListening) {
+            try {
+                recognition.stop();
+            } catch (e) {
+                console.error('停止语音识别失败:', e);
+            }
+        }
+        isListening = false;
+        const voiceBtn = document.getElementById('voiceBtn');
+        if (voiceBtn) {
+            voiceBtn.classList.remove('listening');
+            voiceBtn.title = '语音输入';
+        }
+    }
+
+    // 文字转语音
+    function speakText(text) {
+        // 停止当前语音播放
+        if (isSpeaking) {
+            stopSpeaking();
+        }
+
+        // 更新按钮状态
+        const voiceBtn = document.getElementById('voiceBtn');
+        if (voiceBtn) {
+            voiceBtn.classList.add('speaking');
+            voiceBtn.title = '正在朗读...';
+        }
+        isSpeaking = true;
+
+        try {
+            utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 1;
+            utterance.pitch = 1;
+            utterance.volume = 1;
+
+            utterance.onend = function() {
+                stopSpeaking();
+            };
+
+            utterance.onerror = function(event) {
+                console.error('语音合成错误:', event);
+                stopSpeaking();
+            };
+
+            speechSynthesis.speak(utterance);
+        } catch (e) {
+            console.error('语音合成失败:', e);
+            stopSpeaking();
+        }
+    }
+
+    // 停止语音播放
+    function stopSpeaking() {
+        isSpeaking = false;
+        const voiceBtn = document.getElementById('voiceBtn');
+        if (voiceBtn) {
+            voiceBtn.classList.remove('speaking');
+            voiceBtn.title = '语音输入';
+        }
+
+        if (utterance && speechSynthesis.speaking) {
+            speechSynthesis.cancel();
+        }
+    }
+
+    // 修改显示消息函数，添加朗读按钮
+    function displayMessage(message, sender) {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageElement = document.createElement('div');
+        messageElement.className = `message ${sender}`;
+
+        if (sender === 'user') {
+            messageElement.innerHTML = `
+                <div class="user-content">
+                    <div class="user-message-header">您</div>
+                    <div class="user-message">${message}</div>
+                </div>
+            `;
+        } else {
+            // AI消息添加朗读按钮
+            messageElement.innerHTML = `
+                <div class="ai-content">
+                    <div class="ai-message-header">
+                        AI助手
+                        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="speakText('${message.replace(/'/g, "\\'")}')">
+                            <i class="bi bi-volume-up"></i> 朗读
+                        </button>
+                    </div>
+                    <div class="ai-response">${message}</div>
+                </div>
+            `;
+        }
+
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // 修改显示SQL结果函数，添加朗读按钮
+    function displaySQLResult(data) {
+        // 停止语音识别
+        stopListening();
+        
+        const chatMessages = document.getElementById('chatMessages');
+        const resultElement = document.createElement('div');
+        resultElement.className = 'message ai';
+        
+        let tableHtml = '';
+        if (data.columns && data.rows && data.rows.length > 0) {
+            tableHtml = `
+                <table class="sql-result-table">
+                    <thead>
+                        <tr>
+                            ${data.columns.map(col => `<th>${col}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.rows.map(row => `
+                            <tr>
+                                ${data.columns.map(col => `<td>${row[col] !== null ? row[col] : ''}</td>`).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } else {
+            tableHtml = '<div class="no-data">查询结果为空</div>';
+        }
+        
+        resultElement.innerHTML = `
+            <div class="ai-content">
+                <div class="ai-message-header">
+                    AI助手
+                    <button class="btn btn-sm btn-outline-secondary ms-2" onclick="speakText('查询完成，共有${data.rows ? data.rows.length : 0}条结果')">
+                        <i class="bi bi-volume-up"></i> 朗读
+                    </button>
+                </div>
+                <div class="ai-response">
+                    <div class="sql-result">
+                        <h5>查询结果</h5>
+                        ${tableHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        chatMessages.appendChild(resultElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
     document.getElementById('saveSettings').addEventListener('click', async () => {
         const apiUrl = document.getElementById('apiUrl').value;
         const apiKey = document.getElementById('apiKey').value;
@@ -808,6 +1093,33 @@
                 link.classList.add('active');
             }
         });
+        
+        // 初始化语音功能
+        initVoiceFeatures();
+    });
+
+    // 添加新代码
+    // 绑定语音按钮事件
+    document.getElementById('voiceBtn').addEventListener('click', async () => {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('浏览器不支持麦克风访问');
+            return;
+        }
+
+        try {
+            // 请求麦克风权限
+            await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            // 启动语音识别
+            startListening();
+        } catch (error) {
+            console.error('获取麦克风权限失败:', error);
+            if (error.name === 'NotAllowedError') {
+                alert('请允许麦克风权限以使用语音功能');
+            } else {
+                alert('麦克风访问被拒绝或不可用');
+            }
+        }
     });
 </script>
 </body>

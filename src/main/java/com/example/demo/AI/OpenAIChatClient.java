@@ -178,7 +178,7 @@ public class OpenAIChatClient implements ChatClient {
         
         // 去除可能的代码块标记
         String cleaned = response.trim();
-        if (cleaned.startsWith("```sql")) {
+        if (cleaned.startsWith("``sql")) {
             cleaned = cleaned.substring(6);
         } else if (cleaned.startsWith("```")) {
             cleaned = cleaned.substring(3);
@@ -190,6 +190,9 @@ public class OpenAIChatClient implements ChatClient {
         
         // 去除首尾空白字符
         cleaned = cleaned.trim();
+        
+        // 过滤掉深度思考内容
+        cleaned = removeDeepThoughtContent(cleaned);
         
         // 查找第一个SQL关键字的位置
         String lowerCase = cleaned.toLowerCase();
@@ -317,19 +320,20 @@ public class OpenAIChatClient implements ChatClient {
                 String trimmedLine = line.trim();
                 // 检查是否包含中文解释性文字
                 if (trimmedLine.contains("是合适的") ||
-                    trimmedLine.contains("接下来") ||
-                    trimmedLine.contains("确认") ||
-                    trimmedLine.contains("语法是否正确") ||
-                    trimmedLine.contains("会更合适") ||
-                    trimmedLine.contains("考虑到性能") ||
-                    trimmedLine.contains("最好还是") ||
-                    trimmedLine.contains("需要注意的是") ||
-                    trimmedLine.contains("根据问题描述") ||
-                    trimmedLine.contains("SELECT语句") ||
-                    trimmedLine.contains("确保包含正确的WHERE子句") ||
-                    trimmedLine.contains("检查生成的SQL语句") ||
-                    trimmedLine.contains("符合所有要求") ||
-                    trimmedLine.contains("确认无误后就可以输出结果")) {
+                        trimmedLine.contains("接下来") ||
+                        trimmedLine.contains("确认") ||
+                        trimmedLine.contains("语法是否正确") ||
+                        trimmedLine.contains("会更合适") ||
+                        trimmedLine.contains("考虑到性能") ||
+                        trimmedLine.contains("最好还是") ||
+                        trimmedLine.contains("可能会有的") ||
+                        trimmedLine.contains("需要注意的是") ||
+                        trimmedLine.contains("根据问题描述") ||
+                        trimmedLine.contains("SELECT语句") ||
+                        trimmedLine.contains("确保包含正确的WHERE子句") ||
+                        trimmedLine.contains("检查生成的SQL语句") ||
+                        trimmedLine.contains("符合所有要求") ||
+                        trimmedLine.contains("确认无误后就可以输出结果")) {
                     // 跳过包含解释性文字的行
                     continue;
                 }
@@ -370,7 +374,7 @@ public class OpenAIChatClient implements ChatClient {
         
         // 最后确保返回的是一条有效的SQL语句
         String finalLowerCase = cleaned.toLowerCase().trim();
-        if (!(finalLowerCase.startsWith("select") || 
+        if (!(finalLowerCase.startsWith("select") ||
               finalLowerCase.startsWith("insert") || 
               finalLowerCase.startsWith("update") || 
               finalLowerCase.startsWith("delete"))) {
@@ -408,6 +412,83 @@ public class OpenAIChatClient implements ChatClient {
                         cleaned += ";";
                     }
                 }
+            }
+        }
+        
+        return cleaned;
+    }
+    
+    /**
+     * 移除AI响应中的深度思考内容
+     * @param response AI响应
+     * @return 过滤后的响应
+     */
+    private String removeDeepThoughtContent(String response) {
+        if (response == null || response.isEmpty()) {
+            return response;
+        }
+        
+        String cleaned = response;
+        
+        // 移除常见的深度思考关键词和内容
+        String[] thoughtPatterns = {
+            "让我思考一下",
+            "思考过程",
+            "分析一下",
+            "考虑以下因素",
+            "首先需要理解",
+            "接下来考虑",
+            "需要注意的是",
+            "根据问题描述",
+            "是合适的",
+            "会更合适",
+            "考虑到性能",
+            "最好还是",
+            "确认",
+            "确保包含正确的WHERE子句",
+            "检查生成的SQL语句",
+            "符合所有要求",
+            "确认无误后就可以输出结果",
+            "解释",
+            "说明",
+            "总而言之",
+            "综上所述"
+        };
+        
+        // 移除包含这些关键词的行
+        String[] lines = cleaned.split("\n");
+        StringBuilder sb = new StringBuilder();
+        for (String line : lines) {
+            String trimmedLine = line.trim();
+            boolean shouldSkip = false;
+            
+            // 检查是否包含深度思考关键词
+            for (String pattern : thoughtPatterns) {
+                if (trimmedLine.contains(pattern)) {
+                    shouldSkip = true;
+                    break;
+                }
+            }
+            
+            // 检查是否是解释性语句
+            if (!shouldSkip && (trimmedLine.startsWith("因为") || 
+                               trimmedLine.startsWith("由于") ||
+                               trimmedLine.startsWith("这将"))) {
+                shouldSkip = true;
+            }
+            
+            if (!shouldSkip) {
+                sb.append(line).append("\n");
+            }
+        }
+        
+        cleaned = sb.toString().trim();
+        
+        // 移除常见的前缀说明
+        if (cleaned.startsWith("好的，") || cleaned.startsWith("好的，我来")) {
+            int commaIndex = cleaned.indexOf("，");
+            if (commaIndex > 0) {
+                cleaned = cleaned.substring(commaIndex + 1).trim();
             }
         }
         
