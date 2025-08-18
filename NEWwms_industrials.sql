@@ -412,5 +412,5 @@ SELECT
     t.transaction_time
 FROM inventory_transactions t
          JOIN materials m ON t.material_id = m.id
-WHERE m.material_id = 1  -- 查看第一个物料的所有交易记录
+WHERE m.id = 1  -- 查看第一个物料的所有交易记录
 ORDER BY t.transaction_time;
