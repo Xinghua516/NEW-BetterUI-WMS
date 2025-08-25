@@ -24,9 +24,6 @@ import java.util.stream.Collectors;
 public class PartsController {
     
     @Autowired
-    private BomHeaderRepository bomHeaderRepository;
-    
-    @Autowired
     private MaterialRepository materialRepository;
     
     @Autowired
@@ -54,9 +51,6 @@ public class PartsController {
 
     @GetMapping("/parts")
     public String parts(Model model) {
-        // 获取BOM清单头信息
-        List<BomHeader> bomHeaders = bomHeaderRepository.findAll();
-        model.addAttribute("bomHeaders", bomHeaders);
         return "parts-query";
     }
     

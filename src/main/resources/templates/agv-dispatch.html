@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGV任务调度系统</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <style>
+        /* 全局重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* 布局容器 */
+        .app-container {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            margin-left: 220px; /* 与侧边栏宽度一致 */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部标题栏 */
+        .top-navbar {
+            background: linear-gradient(135deg, #2c3e50, #1a2530);
+            color: white;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .top-navbar h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .top-navbar .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin: 0;
+        }
+
+        /* 内容区域布局 */
+        .content-area {
+            display: flex;
+            flex: 1;
+            padding: 1.5rem;
+            gap: 1.5rem;
+        }
+
+        /* AGV任务列表 */
+        .agv-task-list {
+            flex: 0 0 280px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            height: calc(100vh - 180px);
+            overflow-y: auto;
+        }
+
+        .agv-task-list h2 {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid #eee;
+        }
+
+        .task-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #3498db;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .task-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-item.high-priority {
+            border-left-color: #e74c3c;
+        }
+
+        .task-item.medium-priority {
+            border-left-color: #f39c12;
+        }
+
+        .task-item.completed {
+            border-left-color: #2ecc71;
+            opacity: 0.7;
+        }
+
+        .task-item.conflict {
+            border-left-color: #9b59b6;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(155, 89, 182, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(155, 89, 182, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(155, 89, 182, 0); }
+        }
+
+        .task-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .task-details {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .task-priority {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .priority-high {
+            background-color: #e74c3c;
+        }
+
+        .priority-medium {
+            background-color: #f39c12;
+        }
+
+        .priority-low {
+            background-color: #2ecc71;
+        }
+
+        /* AGV地图区域 */
+        .agv-map-container {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .agv-map-container h2 {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid #eee;
+        }
+
+        .map-area {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 500px;
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 2px;
+            width: 100%;
+            height: 100%;
+            padding: 10px;
+        }
+
+        .map-cell {
+            background: #e9ecef;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            position: relative;
+        }
+
+        .map-cell.wall {
+            background: #343a40;
+        }
+
+        .map-cell.charger {
+            background: #28a745;
+            color: white;
+        }
+
+        .map-cell.station {
+            background: #17a2b8;
+            color: white;
+        }
+
+        /* AGV路径 - 带方向性 */
+        .agv-path {
+            position: absolute;
+            background: rgba(52, 152, 219, 0.5);
+            z-index: 5;
+            transform-origin: 0 50%;
+        }
+
+        .agv-path.horizontal {
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        .agv-path.vertical {
+            width: 8px;
+            border-radius: 4px;
+        }
+
+        /* 路径方向箭头 */
+        .path-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            z-index: 6;
+        }
+
+        .arrow-right {
+            top: -4px;
+            border-width: 4px 0 4px 6px;
+            border-color: transparent transparent transparent #3498db;
+        }
+
+        .arrow-left {
+            top: -4px;
+            border-width: 4px 6px 4px 0;
+            border-color: transparent #3498db transparent transparent;
+        }
+
+        .arrow-down {
+            left: -4px;
+            border-width: 6px 4px 0 4px;
+            border-color: #3498db transparent transparent transparent;
+        }
+
+        .arrow-up {
+            left: -4px;
+            border-width: 0 4px 6px 4px;
+            border-color: transparent transparent #3498db transparent;
+        }
+
+        /* AGV单元 - 更符合现实比例的矩形 (约 1200mm x 800mm 比例) */
+        .agv-unit {
+            position: absolute;
+            width: 60px;
+            height: 40px;
+            background: #007bff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+            transition: all 1s linear;
+            z-index: 10;
+            transform: translate(-50%, -50%);
+        }
+
+        .agv-unit.conflict {
+            background: #9b59b6;
+            animation: conflict-pulse 1s infinite;
+        }
+
+        @keyframes conflict-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(155, 89, 182, 0.7); }
+            70% { box-shadow: 0 0 0 5px rgba(155, 89, 182, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(155, 89, 182, 0); }
+        }
+
+        .agv-unit::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 15px;
+            background: #0056b3;
+            border-radius: 4px;
+        }
+
+        /* AGV方向指示器 */
+        .agv-direction {
+            position: absolute;
+            width: 15px;
+            height: 8px;
+            background: #ff6b6b;
+            border-radius: 2px;
+            top: -10px;
+        }
+
+        /* 任务调度数据区域 */
+        .dispatch-data {
+            flex: 0 0 320px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            height: calc(100vh - 180px);
+            overflow-y: auto;
+        }
+
+        .dispatch-data h2 {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid #eee;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            border-radius: 8px;
+            padding: 1.2rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .stats-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .stats-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .stats-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            text-align: center;
+        }
+
+        .agv-status-list {
+            margin-top: 1.5rem;
+        }
+
+        .agv-status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .agv-status-item:last-child {
+            border-bottom: none;
+        }
+
+        .agv-id {
+            font-weight: 600;
+        }
+
+        .agv-status {
+            padding: 0.2rem 0.6rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .status-active {
+            background: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+        }
+
+        .status-charging {
+            background: rgba(52, 152, 219, 0.2);
+            color: #2980b9;
+        }
+
+        .status-idle {
+            background: rgba(149, 165, 166, 0.2);
+            color: #7f8c8d;
+        }
+
+        .status-error {
+            background: rgba(231, 76, 60, 0.2);
+            color: #c0392b;
+        }
+
+        .status-conflict {
+            background: rgba(155, 89, 182, 0.2);
+            color: #8e44ad;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .content-area {
+                flex-direction: column;
+            }
+            
+            .agv-task-list, 
+            .dispatch-data {
+                flex: 0 0 auto;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+        <!-- 主内容区域 -->
+        <div class="main-content">
+            <!-- 顶部标题栏 -->
+            <header class="top-navbar">
+                <h1><i class="bi bi-robot me-2"></i>AGV任务调度系统</h1>
+                <p class="subtitle">自动化导引车任务监控与调度管理平台</p>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content-area">
+                <!-- 左侧：AGV任务列表 -->
+                <div class="agv-task-list">
+                    <h2><i class="bi bi-list-check me-2"></i>任务列表</h2>
+                    
+                    <div class="task-item high-priority conflict">
+                        <div class="task-title">
+                            <span>紧急补料冲突</span>
+                            <span class="task-priority priority-high">高优先级</span>
+                        </div>
+                        <div class="task-details">
+                            <div>AGV #001 → 仓库A → 生产线1</div>
+                            <div>状态: 路径冲突</div>
+                            <div>冲突对象: AGV #003</div>
+                            <div class="text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>需要人工干预</div>
+                        </div>
+                    </div>
+                    
+                    <div class="task-item high-priority">
+                        <div class="task-title">
+                            <span>原材料运输</span>
+                            <span class="task-priority priority-high">高优先级</span>
+                        </div>
+                        <div class="task-details">
+                            <div>AGV #001 → 仓库A → 生产线1</div>
+                            <div>状态: 执行中</div>
+                            <div>预计完成: 15:30</div>
+                        </div>
+                    </div>
+                    
+                    <div class="task-item medium-priority">
+                        <div class="task-title">
+                            <span>成品入库</span>
+                            <span class="task-priority priority-medium">中优先级</span>
+                        </div>
+                        <div class="task-details">
+                            <div>AGV #003 → 生产线2 → 成品库</div>
+                            <div>状态: 等待执行</div>
+                            <div>预计开始: 15:45</div>
+                        </div>
+                    </div>
+                    
+                    <div class="task-item conflict">
+                        <div class="task-title">
+                            <span>路径冲突任务</span>
+                            <span class="task-priority priority-medium">中优先级</span>
+                        </div>
+                        <div class="task-details">
+                            <div>AGV #003 → 生产线2 → 成品库</div>
+                            <div>状态: 路径冲突</div>
+                            <div>冲突对象: AGV #001</div>
+                            <div class="text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>需要重新调度</div>
+                        </div>
+                    </div>
+                    
+                    <div class="task-item">
+                        <div class="task-title">
+                            <span>设备维护</span>
+                            <span class="task-priority priority-low">低优先级</span>
+                        </div>
+                        <div class="task-details">
+                            <div>AGV #002 → 充电桩 → 维修区</div>
+                            <div>状态: 等待执行</div>
+                            <div>预计开始: 16:15</div>
+                        </div>
+                    </div>
+                    
+                    <div class="task-item completed">
+                        <div class="task-title">
+                            <span>废料处理</span>
+                            <span class="task-priority priority-low">已完成</span>
+                        </div>
+                        <div class="task-details">
+                            <div>AGV #004 → 生产线3 → 废料区</div>
+                            <div>状态: 已完成</div>
+                            <div>完成时间: 14:45</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 中间：AGV地图 -->
+                <div class="agv-map-container">
+                    <h2><i class="bi bi-map me-2"></i>AGV实时地图</h2>
+                    <div class="map-area">
+                        <div class="map-grid">
+                            <!-- 模拟地图网格 -->
+                            <!-- 墙体 -->
+                            <div class="map-cell wall" th:each="i : ${#numbers.sequence(1, 10)}" th:if="${i <= 10}"></div>
+                            <div class="map-cell wall"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell wall"></div>
+                            <div class="map-cell wall"></div>
+                            
+                            <div class="map-cell wall"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell station">装料区</div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell station">生产线1</div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell wall"></div>
+                            
+                            <div class="map-cell wall"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell wall"></div>
+                            
+                            <div class="map-cell wall"></div>
+                            <div class="map-cell station">仓库A</div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell station">生产线2</div>
+                            <div class="map-cell wall"></div>
+                            
+                            <div class="map-cell wall"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell wall"></div>
+                            
+                            <div class="map-cell wall"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell wall"></div>
+                            
+                            <div class="map-cell wall"></div>
+                            <div class="map-cell station">仓库B</div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell station">成品库</div>
+                            <div class="map-cell wall"></div>
+                            
+                            <div class="map-cell wall"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell station">维修区</div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell wall"></div>
+                            
+                            <div class="map-cell wall"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell charger">充电桩</div>
+                            <div class="map-cell"></div>
+                            <div class="map-cell wall"></div>
+                            
+                            <div class="map-cell wall" th:each="i : ${#numbers.sequence(1, 10)}" th:if="${i <= 10}"></div>
+                        </div>
+                        
+                        <!-- AGV路径 - 根据任务生成，具有方向性 -->
+                        <!-- AGV #001 任务路径: 仓库A → 生产线1 -->
+                        <div class="agv-path horizontal" style="top: 25%; left: 25%; width: 30%;"></div>
+                        <div class="path-arrow arrow-right" style="top: 25%; left: 35%;"></div>
+                        <div class="path-arrow arrow-right" style="top: 25%; left: 45%;"></div>
+                        
+                        <!-- AGV #003 任务路径: 生产线2 → 成品库 -->
+                        <div class="agv-path horizontal" style="top: 55%; left: 55%; width: 30%;"></div>
+                        <div class="path-arrow arrow-right" style="top: 55%; left: 65%;"></div>
+                        <div class="path-arrow arrow-right" style="top: 55%; left: 75%;"></div>
+                        
+                        <!-- 冲突路径区域 -->
+                        <div class="agv-path vertical conflict" style="top: 25%; left: 55%; height: 30%; background: rgba(155, 89, 182, 0.5);"></div>
+                        <div class="path-arrow arrow-down conflict" style="top: 35%; left: 55%; border-color: #9b59b6 transparent transparent transparent;"></div>
+                        <div class="path-arrow arrow-down conflict" style="top: 45%; left: 55%; border-color: #9b59b6 transparent transparent transparent;"></div>
+                        
+                        <!-- AGV单元 -->
+                        <div class="agv-unit conflict" style="top: 25%; left: 25%;">
+                            <span>1</span>
+                            <div class="agv-direction"></div>
+                        </div>
+                        <div class="agv-unit" style="top: 55%; left: 55%;">
+                            <span>3</span>
+                            <div class="agv-direction"></div>
+                        </div>
+                        <div class="agv-unit" style="top: 85%; left: 35%;">
+                            <span>2</span>
+                            <div class="agv-direction"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：任务调度数据 -->
+                <div class="dispatch-data">
+                    <h2><i class="bi bi-bar-chart me-2"></i>调度数据</h2>
+                    
+                    <div class="stats-card">
+                        <h3>今日任务统计</h3>
+                        <div class="stats-value">24</div>
+                        <div class="stats-label">已完成 / 总计 32 任务</div>
+                    </div>
+                    
+                    <div class="stats-card">
+                        <h3>AGV运行状态</h3>
+                        <div class="stats-value">5</div>
+                        <div class="stats-label">在线 AGV 单元</div>
+                    </div>
+                    
+                    <div class="stats-card">
+                        <h3>系统效率</h3>
+                        <div class="stats-value">75%</div>
+                        <div class="stats-label">任务完成率</div>
+                    </div>
+                    
+                    <h3 class="mt-4"><i class="bi bi-info-circle me-2"></i>AGV状态</h3>
+                    <div class="agv-status-list">
+                        <div class="agv-status-item">
+                            <span class="agv-id">AGV #001</span>
+                            <span class="agv-status status-conflict">路径冲突</span>
+                        </div>
+                        <div class="agv-status-item">
+                            <span class="agv-id">AGV #002</span>
+                            <span class="agv-status status-charging">充电中</span>
+                        </div>
+                        <div class="agv-status-item">
+                            <span class="agv-id">AGV #003</span>
+                            <span class="agv-status status-conflict">路径冲突</span>
+                        </div>
+                        <div class="agv-status-item">
+                            <span class="agv-id">AGV #004</span>
+                            <span class="agv-status status-idle">空闲</span>
+                        </div>
+                        <div class="agv-status-item">
+                            <span class="agv-id">AGV #005</span>
+                            <span class="agv-status status-active">运行中</span>
+                        </div>
+                    </div>
+                    
+                    <h3 class="mt-4"><i class="bi bi-exclamation-triangle me-2"></i>系统警报</h3>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        AGV #001 和 AGV #003 发生路径冲突，请及时处理
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        AGV #002 电池电量低，请及时处理
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 模拟AGV沿任务路径移动
+        document.addEventListener('DOMContentLoaded', function() {
+            // 定义AGV路径点
+            const agv1Path = [
+                { top: 25, left: 25 },  // 仓库A
+                { top: 25, left: 35 },
+                { top: 25, left: 45 },
+                { top: 25, left: 55 },  // 冲突点
+                { top: 35, left: 55 },
+                { top: 45, left: 55 },
+                { top: 55, left: 55 },  // 生产线1
+                { top: 55, left: 65 },
+                { top: 55, left: 75 },
+                { top: 55, left: 85 }   // 继续向右
+            ];
+            
+            const agv3Path = [
+                { top: 55, left: 55 },  // 生产线2
+                { top: 55, left: 65 },
+                { top: 55, left: 75 },
+                { top: 55, left: 85 }   // 成品库
+            ];
+            
+            const agv2Path = [
+                { top: 85, left: 35 },  // 充电桩
+                { top: 75, left: 35 },
+                { top: 65, left: 35 },
+                { top: 55, left: 35 }
+            ];
+            
+            const agv1 = document.querySelector('.agv-unit.conflict');
+            const agv3 = document.querySelectorAll('.agv-unit:not(.conflict)')[0];
+            const agv2 = document.querySelectorAll('.agv-unit:not(.conflict)')[1];
+            
+            let agv1Index = 0;
+            let agv3Index = 0;
+            let agv2Index = 0;
+            
+            function moveAGVs() {
+                // 移动 AGV #001
+                if (agv1 && agv1Index < agv1Path.length - 1) {
+                    agv1Index++;
+                    agv1.style.top = agv1Path[agv1Index].top + '%';
+                    agv1.style.left = agv1Path[agv1Index].left + '%';
+                }
+                
+                // 移动 AGV #003
+                if (agv3 && agv3Index < agv3Path.length - 1) {
+                    agv3Index++;
+                    agv3.style.top = agv3Path[agv3Index].top + '%';
+                    agv3.style.left = agv3Path[agv3Index].left + '%';
+                }
+                
+                // 移动 AGV #002
+                if (agv2 && agv2Index < agv2Path.length - 1) {
+                    agv2Index++;
+                    agv2.style.top = agv2Path[agv2Index].top + '%';
+                    agv2.style.left = agv2Path[agv2Index].left + '%';
+                }
+            }
+            
+            // 每2秒更新一次位置
+            setInterval(moveAGVs, 2000);
+        });
+    </script>
+</body>
+</html>

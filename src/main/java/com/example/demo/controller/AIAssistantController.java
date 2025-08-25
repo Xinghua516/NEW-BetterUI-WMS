@@ -11,6 +11,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
+// 添加缺失的导入语句
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestTemplate;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -137,6 +143,67 @@ public class AIAssistantController {
     public ResponseEntity<Map<String, Object>> naturalLanguageToSQLAndExecute(@RequestBody Map<String, String> request) {
         try {
             String naturalLanguageQuery = request.get("naturalLanguageQuery");
+
+            // 检查是否为特殊的"执行盘库操作"指令
+            if ("执行盘库操作。".equals(naturalLanguageQuery)) {
+                try {
+                    // 异步向Node-RED发送请求，不等待响应
+                    RestTemplate restTemplate = new RestTemplate();
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setContentType(MediaType.TEXT_PLAIN);
+                    HttpEntity<String> entity = new HttpEntity<>("2", headers);
+                    String targetUrl = "http://192.168.10.213:20000/cs";
+                    
+                    // 在新线程中发送请求，不阻塞主流程
+                    new Thread(() -> {
+                        try {
+                            restTemplate.postForEntity(targetUrl, entity, String.class);
+                            logger.info("向Node-RED发送盘库指令完成");
+                        } catch (Exception e) {
+                            logger.error("向Node-RED发送盘库指令时出现异常: ", e);
+                        }
+                    }).start();
+                } catch (Exception e) {
+                    logger.error("创建Node-RED请求时出现异常: ", e);
+                }
+                
+                // 同时执行查询materials表的操作
+                String sql = "SELECT id, material_code, material_name, category_id, specification, unit, barcode, brand, supplier, status FROM materials;";
+                Map<String, Object> result = sqlExecutionService.executeQuery(sql);
+                result.put("generatedSql", sql);
+                result.put("message", "已执行盘库操作并查询物料信息");
+                return ResponseEntity.ok(result);
+            }
+            
+            // 检查是否为特殊的"执行入库操作"指令
+            if ("执行入库操作。".equals(naturalLanguageQuery)) {
+                try {
+                    // 异步向Node-RED发送请求，不等待响应
+                    RestTemplate restTemplate = new RestTemplate();
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setContentType(MediaType.TEXT_PLAIN);
+                    HttpEntity<String> entity = new HttpEntity<>("3", headers);
+                    String targetUrl = "http://192.168.10.213:20000/cs";
+                    
+                    // 在新线程中发送请求，不阻塞主流程
+                    new Thread(() -> {
+                        try {
+                            restTemplate.postForEntity(targetUrl, entity, String.class);
+                            logger.info("向Node-RED发送入库指令完成");
+                        } catch (Exception e) {
+                            logger.error("向Node-RED发送入库指令时出现异常: ", e);
+                        }
+                    }).start();
+                } catch (Exception e) {
+                    logger.error("创建Node-RED请求时出现异常: ", e);
+                }
+                
+                // 返回提示信息
+                Map<String, Object> result = new HashMap<>();
+                result.put("success", true);
+                result.put("message", "正在执行入库操作");
+                return ResponseEntity.ok(result);
+            }
 
             // 验证输入
             ValidationResult validation = validateInput(naturalLanguageQuery);
